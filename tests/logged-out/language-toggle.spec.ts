@@ -1,4 +1,11 @@
-import { test, expect } from 'donobu';
+/**
+ * Note that this test uses tools that require the usage of an LLM, so be
+ * sure to have an appropriate LLM API key available. This can be done
+ * by providing an environment variable (e.g. OPENAI_API_KEY, ANTHROPIC_API_KEY,
+ * or GOOGLE_GENERATIVE_AI_API_KEY) or by configuring a flow runner using
+ * the Donobu app.
+ */
+import { test } from 'donobu';
 
 const title = 'Test for https://staging-dashboard.immerse.online/';
 const details = {
@@ -16,7 +23,7 @@ test(title, details, async ({ page }) => {
       element: [
         "[aria-label='Display\\ Language']",
         'html > body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        '#mantine-r2-target',
+        '#mantine-r0-target',
         "//div[normalize-space(.)='ENGLISH']",
         'div > div:nth-of-type(2)',
         'div > :nth-child(2)',
@@ -41,5 +48,7 @@ test(title, details, async ({ page }) => {
     },
   });
   // Asserting that the page content is now in Japanese.
-  await expect(page.getByText('ログイン')).toBeVisible();
+  await page.assertPageText({
+    text: 'ログイン',
+  });
 });
