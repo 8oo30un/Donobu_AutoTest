@@ -8,7 +8,7 @@ const details = {
 Assert that the page shows text "Immerse Demo Account"
 
 email: {{$.env.EMAIL}}
-password: {{$.env.PASSWORD}}
+password: {{$.env.PASSWORD}}`
   },
 };
 test(title, details, async ({ page }) => {
