@@ -4,8 +4,8 @@ export default defineConfig({
   testDir: "./tests",
   projects: [
     {
-      name: "login",
-      testMatch: "tests/auth/login.spec.ts",
+      name: "dashboard-login",
+      testMatch: "tests/auth/dashboard-login.spec.ts",
       metadata: {
         SELF_HEAL_TESTS_ENABLED: false,
       },
@@ -13,7 +13,7 @@ export default defineConfig({
     {
       name: "logged-in-tests",
       testMatch: "tests/logged-in/**/*.spec.ts",
-      dependencies: ["login"],
+      dependencies: ["dashboard-login"],
       use: { storageState: "login-state.json" },
     },
     {
