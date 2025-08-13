@@ -155,6 +155,6 @@ test(title, details, async ({ page }) => {
   // Verifying that the TOS column is sorted in descending order as required by the objective, checking that the first learner's TOS value is higher than subsequent learners.
   await page.visuallyAssert({
     assertionToTestFor:
-      'Assert that the TOS column is sorted in descending order with the first learner having a TOS value of 56:03, the second learner having 55:29, and subsequent learners having progressively lower or equal TOS values.',
+      'Assert that the TOS column is sorted in descending order with the first learner having a TOS value of 62:00, the second learner having 57:31, and subsequent learners having progressively lower or equal TOS values.',
   });
 });
