@@ -12,7 +12,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install System dependencies
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
+
+      - name: Install Donobu dependencies
         run: npm install && npx playwright install --with-deps
 
       - name: Run Playwright tests
@@ -25,7 +28,7 @@ jobs:
           PASSWORD: ${{ secrets.PASSWORD }}
           SELF_HEAL_TESTS_ENABLED: true
 
-        run: npx playwright test
+        run: xvfb-run npx playwright test
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4
