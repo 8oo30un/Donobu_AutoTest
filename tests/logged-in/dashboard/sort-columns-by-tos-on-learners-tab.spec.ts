@@ -23,18 +23,21 @@ Wait for Learners to load
 Change "Per Page" to 50
 Wait for Learners to load
 Once loaded, click on TOS once
-Assert text and verify that the TOS column is sorted in descending order -- 1st Learner's TOS column is higher than the 2nd and so forth to bottom of list or hit 0 or "N/A"`,
+Assert that the TOS column is sorted in descending order`,
     },
   ],
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
   await page.goto('https://staging-dashboard.immerse.online/dashboard');
-  // Clicking on the Learners tab to navigate to the learners section as required by the objective.
+  // Waiting for the page to load completely before attempting to interact with elements.
+  await page.waitForTimeout(5000);
+  // Clicking on the Learners tab to navigate to the learners' data.
   await page.clickElement({
     selector: {
       element: [
         '#__next > div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > button:nth-of-type(2)',
+        "[data-testid='layout-header-learners-button']",
         ".//button[normalize-space(.)='Learners']",
         'div.mantine-xg7kom > button:nth-of-type(2)',
         'div.mantine-yx7xue > div:nth-of-type(1) > button:nth-of-type(2)',
@@ -48,7 +51,7 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
-  // Changing the timeframe to "All Time" as required by the objective to see all learners data.
+  // Clicking on the Timeframe dropdown to change it to 'All Time'.
   await page.clickElement({
     selector: {
       element: [
@@ -66,7 +69,7 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
-  // Selecting "All Time" from the timeframe dropdown to show all learners data as required by the objective.
+  // Selecting 'All Time' from the Timeframe dropdown to view all learner data.
   await page.clickElement({
     selector: {
       element: [
@@ -83,22 +86,23 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
-  // Waiting for the learners data to load after changing the timeframe to "All Time" as required by the objective.
-  await page.waitForTimeout(3000);
-  // Scrolling down the page to reveal the "Per page" dropdown, which was not visible in the previous viewport.
+  // Waiting for the learners' data to load after changing the timeframe to 'All Time'.
+  await page.waitForTimeout(5000);
+  // Scrolling down the page to reveal the 'Per page' dropdown.
   await page.scroll({
     direction: 'DOWN',
     selector: {
-      element: [],
+      element: ['html'],
       frame: null,
     },
   });
-  // Clicking on the "Per page" dropdown to change it from 10 to 50 as required by the objective.
+  // Clicking on the 'Per page' dropdown to change the number of learners displayed per page.
   await page.clickElement({
     selector: {
       element: [
         '#mantine-rl-target',
         '#__next > div > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
+        "[data-testid='learners-limit-dropdown']",
         ".//button[normalize-space(.)='10']",
         "div:nth-of-type(4) > div:nth-of-type(1) > [data-button='true']",
         'div:nth-of-type(4) > div:nth-of-type(1) > button.mantine-UnstyledButton-root',
@@ -114,11 +118,12 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
-  // Selecting "50" from the "Per page" dropdown to show 50 learners per page as required by the objective.
+  // Selecting '50' from the 'Per page' dropdown to display more learners per page.
   await page.clickElement({
     selector: {
       element: [
         '#mantine-rl-dropdown > div > button:nth-of-type(3)',
+        "[data-testid='learners-limit-menu-item-50']",
         ".//button[normalize-space(.)='50']",
         'div.mantine-11argd8 > div:nth-of-type(1) > div > div > button:nth-of-type(3)',
         'div.mantine-1hv2vg > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(3)',
@@ -132,15 +137,16 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
-  // Waiting for the learners data to load after changing the per page setting to 50 as required by the objective.
-  await page.waitForTimeout(3000);
-  // Clicking on the TOS (HH:MM) column header to sort the learners by TOS as required by the objective.
+  // Waiting for the learners' data to load after changing the 'Per page' setting to 50.
+  await page.waitForTimeout(5000);
+  // Clicking on the TOS (HH:MM) column header to sort the column in descending order.
   await page.clickElement({
     selector: {
       element: [
+        "[data-testid='learners-table-header-total_time_on_site']",
         'tr.mantine-t52jw9 > th:nth-of-type(8)',
-        'table.mantine-k1avq1 > thead > tr > th:nth-of-type(8)',
         'div.mantine-ilrge8 > table > thead > tr > th:nth-of-type(8)',
+        "[data-testid='learners-table'] > thead > tr > th:nth-of-type(8)",
         'div.mantine-1hv2vg > div:nth-of-type(3) > table > thead > tr > th:nth-of-type(8)',
         'div.mantine-1ywgif7 > div > div:nth-of-type(3) > table > thead > tr > th:nth-of-type(8)',
         'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(3) > table > thead > tr > th:nth-of-type(8)',
@@ -150,11 +156,9 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
-  // Waiting for the data to load after clicking on the TOS column header to allow the sorting to complete.
-  await page.waitForTimeout(3000);
-  // Verifying that the TOS column is sorted in descending order as required by the objective, checking that the first learner's TOS value is higher than subsequent learners.
+  // Asserting that the 'TOS (HH:MM)' column is sorted in descending order as per the objective.
   await page.visuallyAssert({
     assertionToTestFor:
-      'Assert that the TOS column is sorted in descending order with the first learner having a TOS value of 62:00, the second learner having 57:31, and subsequent learners having progressively lower or equal TOS values.',
+      "Assert that the 'TOS (HH:MM)' column is sorted in descending order.",
   });
 });
