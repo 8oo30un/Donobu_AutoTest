@@ -57,6 +57,12 @@ export default defineConfig({
       use: { storageState: "login-state.json" },
     },
     {
+      name: "logged-in-smoke-tests",
+      testMatch: "tests/smoke-tests/logged-in/**/*.spec.ts",
+      dependencies: ["b2b-smoke-test-login"],
+      use: { storageState: "b2b-login-state.json" },
+    },
+    {
       name: "logged-out-tests",
       testMatch: "tests/logged-out/**/*.spec.ts",
     },
