@@ -31,6 +31,26 @@ export default defineConfig({
       },
     },
     {
+      name: "b2b-smoke-test-login",
+      testMatch: "tests/smoke-tests/b2b-login-smoke-test.spec.ts",
+      metadata: {
+        SELF_HEAL_TESTS_ENABLED: false,
+      },
+      use: {
+        // Grant permissions for this origin
+        permissions: [
+          "microphone", // mic input
+        ],
+        launchOptions: {
+          args: [
+            "--use-fake-ui-for-media-stream", // auto-allow prompt
+            "--use-fake-device-for-media-stream" // synthetic mic
+          ],
+          headless: false // real mic won't work in headless
+        },
+      },
+    },
+    {
       name: "logged-in-tests",
       testMatch: "tests/logged-in/**/*.spec.ts",
       dependencies: ["dashboard-login"],
