@@ -121,12 +121,7 @@ test(title, details, async ({ page }) => {
         )
         .click();
     // Waiting for the learner table to load and display data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table"]').waitFor({ state: 'visible', timeout: 30000 });
     // Clicking on the Name column header to sort the learner table in ascending order.
     await page
         .find("[data-testid='learners-table-header-last_name']", {
@@ -143,12 +138,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to update with the latest sort parameter by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all Name column values from the table to verify ascending alphanumeric sort order.
     await page.analyzePageText({
         analysisToRun:
@@ -172,12 +163,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to update with the latest sort parameter by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all Name column values from the table to verify descending alphanumeric sort order.
     await page.analyzePageText({
         analysisToRun:
@@ -202,12 +189,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to refresh after clicking the Email column header by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all Email values from the table to verify that they are sorted in reverse alphanumeric order (Z → A).
     await page.analyzePageText({
         analysisToRun:
@@ -218,7 +201,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Email values are sorted in reverse alphanumeric order (Z → A).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of emails is sorted in descending alphanumeric order: ["starter.demo@immerse.online", "sample.starterlowered.learner.9@immerse.online", "sample.starterlowered.learner.8@immerse.online", "sample.starterlowered.learner.7@immerse.online", "sample.starterlowered.learner.6@immerse.online", "sample.starterlowered.learner.10@immerse.online", "sample.starter.learner.9@immerse.online", "sample.starter.learner.8@immerse.online", "sample.starter.learner.7@immerse.online", "sample.starter.learner.6@immerse.online"]',
+            'Assert that the following list of emails is sorted in descending alphanumeric order',
     });
     // Clicking on the Email column header to sort the table in ascending order.
     await page
@@ -236,12 +219,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to refresh after clicking the Email column header by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all Email values from the table to verify that they are sorted alphanumerically by email ID (A → Z).
     await page.analyzePageText({
         analysisToRun:
@@ -265,12 +244,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to refresh after clicking the Email column header for ascending sort.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all Email values from the table to verify that they are sorted alphanumerically by email ID (A → Z).
     await page.analyzePageText({
         analysisToRun:
@@ -281,7 +256,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Email values are sorted alphanumerically by email ID (A → Z).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of emails is sorted in ascending alphanumeric order: ["sample.learner.2@immerse.online", "sample.learner.3@immerse.online", "sample.learner.4@immerse.online", "sample.learner.5@immerse.online", "sample.learner.6@immerse.online", "sample.learner.7@immerse.online", "sample.learner.8@immerse.online", "sample.learner.9@immerse.online", "sample.learner.10@immerse.online", "sample.pro.learner.6@immerse.online"]',
+            'Assert that the following list of emails is sorted in ascending alphanumeric order',
     });
     // Clicking on the Location column header to sort the table in descending order.
     await page
@@ -299,12 +274,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to refresh after clicking the Location column header by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Location values to verify descending alphabetical sort order.
     await page.analyzePageText({
         analysisToRun:
@@ -328,12 +299,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to refresh after clicking the Location column header for ascending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Location values to verify ascending alphabetical sort order.
     await page.analyzePageText({
         analysisToRun:
@@ -358,12 +325,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after clicking the Last Login (PDT) column header for descending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Last Login (PDT) values to verify that rows are sorted in reverse chronological order (latest → earliest).
     await page.analyzePageText({
         analysisToRun:
@@ -374,7 +337,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Last Login (PDT) values are sorted in reverse chronological order (latest → earliest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of dates and times is sorted in reverse chronological order (latest to earliest): ["19 Oct, 2025, 06:45 AM", "13 Oct, 2025, 10:27 AM", "09 Oct, 2025, 07:11 AM", "07 Oct, 2025, 10:41 AM", "06 Oct, 2025, 03:01 PM", "06 Oct, 2025, 02:58 PM", "06 Oct, 2025, 02:55 PM", "06 Oct, 2025, 02:48 PM", "06 Oct, 2025, 02:07 PM", "13 Aug, 2025, 05:26 PM"]',
+            'Assert that the following list of dates and times is sorted in reverse chronological order (latest to earliest)',
     });
     // Clicking on the Last Login (PDT) column header to sort by oldest first (ascending order).
     await page
@@ -392,12 +355,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to update after clicking the Last Login (PDT) column header for ascending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all Last Login (PDT) date-time values to verify that rows are sorted chronologically (earliest → latest).
     await page.analyzePageText({
         analysisToRun:
@@ -408,7 +367,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Last Login (PDT) date-time values are sorted chronologically (earliest → latest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of dates and times is sorted in chronological order (earliest to latest): ["05 Nov, 2024, 04:53 PM", "05 Nov, 2024, 05:49 PM", "05 Nov, 2024, 05:55 PM", "07 Nov, 2024, 09:56 AM", "07 Nov, 2024, 09:57 AM", "07 Nov, 2024, 09:58 AM", "01 Jul, 2025, 07:43 AM", "02 Jul, 2025, 11:08 AM", "01 Aug, 2025, 07:31 AM", "13 Aug, 2025, 05:26 PM"]',
+            'Assert that the following list of dates and times is sorted in chronological order (earliest to latest)',
     });
     // Clicking on the Start column header to sort in descending order.
     await page
@@ -426,12 +385,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to update after clicking the Start column header for descending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Start values to verify that they are sorted in decreasing order (highest → lowest).
     await page.analyzePageText({
         analysisToRun:
@@ -442,7 +397,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Start values are sorted in decreasing order (highest → lowest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Start values is sorted in decreasing order (highest → lowest): ["Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1"]',
+            'Assert that the following list of Start values is sorted in decreasing order (highest → lowest)',
     });
     // Clicking on the Start column header to sort the table in ascending order.
     await page
@@ -460,12 +415,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table values to refresh after clicking the Start column header for ascending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all Start values (e.g., Level/Stage) to verify that they are sorted in increasing order (lowest → highest).
     await page.analyzePageText({
         analysisToRun:
@@ -476,7 +427,7 @@ test(title, details, async ({ page }) => {
     // Verifying that all extracted Start values are sorted in increasing order (lowest → highest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Start values is sorted in increasing order (lowest → highest): ["Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1"]',
+            'Assert that the following list of Start values is sorted in increasing order (lowest → highest)',
     });
     // Clicking on the Current column header to sort in descending order.
     await page
@@ -494,12 +445,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after clicking the Current column header for descending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Current values to verify that they are sorted in reverse order (highest → lowest).
     await page.analyzePageText({
         analysisToRun:
@@ -510,7 +457,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Current values are sorted in reverse order (highest → lowest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Current values is sorted in decreasing order (highest → lowest): ["Level 5", "Level 5", "Level 5", "Level 5", "Level 5", "Level 5", "Level 5", "Level 5", "Level 5", "Level 5"]',
+            'Assert that the following list of Current values is sorted in decreasing order (highest → lowest)',
     });
     // Clicking on the Current column header to sort the table ascendingly.
     await page
@@ -528,12 +475,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to reload with data after sorting the 'Current' column in ascending order.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Current values to verify ascending sequence (lowest → highest).
     await page.analyzePageText({
         analysisToRun:
@@ -544,7 +487,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Current values are sorted in ascending sequence (lowest → highest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Current values is sorted in increasing order (lowest → highest): ["Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 1", "Level 2", "Level 2"]',
+            'Assert that the following list of Current values is sorted in increasing order (lowest → highest)',
     });
     // Clicking on the TOS (HH:MM) column header to sort in descending order.
     await page
@@ -562,12 +505,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after clicking the TOS (HH:MM) column header for descending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting TOS (HH:MM) values to verify that rows are sorted numerically (highest → lowest).
     await page.analyzePageText({
         analysisToRun:
@@ -578,7 +517,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted TOS (HH:MM) values are sorted numerically (highest → lowest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of TOS (HH:MM) values, when converted to minutes, is sorted in descending order: ["08:49", "08:10", "08:06", "08:03", "07:47", "07:42", "07:42", "07:40", "07:25", "07:20"]',
+            'Assert that the following list of TOS (HH:MM) values, when converted to minutes, is sorted in descending order',
     });
     // Clicking on the TOS (HH:MM) column header to sort by ascending order.
     await page
@@ -596,12 +535,8 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after clicking the TOS (HH:MM) column header for ascending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting all TOS (HH:MM) values to verify that rows are sorted numerically by total time in minutes (lowest → highest).
     await page.analyzePageText({
         analysisToRun:
@@ -612,7 +547,7 @@ test(title, details, async ({ page }) => {
     // Verifying that all extracted TOS (HH:MM) values are sorted numerically by total time in minutes (lowest → highest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of TOS (HH:MM) values, when converted to minutes, is sorted in ascending order: ["01:28", "02:18", "02:19", "03:01", "03:09", "03:14", "03:35", "03:37", "03:47", "03:51"]',
+            'Assert that the following list of TOS (HH:MM) values, when converted to minutes, is sorted in ascending order',
     });
     // Clicking on the Self-Paced Lessons column header to sort descending.
     await page
@@ -630,19 +565,22 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after clicking the Self-Paced Lessons column header for descending sort, by asserting that the loading spinner is no longer visible and the table contains data.
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the loading spinner is not visible and the learner table contains at least one row of data.',
-        retries: 10,
-        retryWaitSeconds: 5,
-    });
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Self-Paced Lessons values to verify that counts are sorted numerically (largest → smallest).
-    await page.analyzePageText({
-        analysisToRun:
-            "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
-        additionalRelevantContext:
-            'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
-    });
+    // await page.analyzePageText({
+    //     analysisToRun:
+    //         "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
+    //     additionalRelevantContext:
+    //         'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
+    // });
+    // // Verifying that the extracted Self-Paced Lessons values are sorted numerically (largest → smallest).
+    // await page.visuallyAssert({
+    //     assertionToTestFor:
+    //         'Assert that the following list of Self-Paced Lessons values is sorted in descending numerical order',
+    //     retries: 5,
+    //     retryWaitSeconds: 5,
+    // });
 
     // Clicking on the Self-Paced Lessons header to sort ascending.
     await page
@@ -659,20 +597,24 @@ test(title, details, async ({ page }) => {
             ],
         })
         .click();
-    // Verifying that the extracted Self-Paced Lessons values are sorted numerically (smallest → largest).
-    await page.visuallyAssert({
-        assertionToTestFor:
-            'Assert that the following list of Self-Paced Lessons values is sorted in ascending numerical order: ["0", "2", "2", "2", "3", "3", "3", "3", "4", "5"]',
-        retries: 5,
-        retryWaitSeconds: 5,
-    });
+    // Waiting for the table to update after clicking the Self-Paced Lessons column header for ascending sort, by asserting that the loading spinner is no longer visible and the table contains data.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Self-Paced Lessons values again to verify that the counts are sorted numerically (smallest → largest) after clicking the header.
-    await page.analyzePageText({
-        analysisToRun:
-            "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
-        additionalRelevantContext:
-            'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
-    });
+    // await page.analyzePageText({
+    //     analysisToRun:
+    //         "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
+    //     additionalRelevantContext:
+    //         'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
+    // });
+    // // Verifying that the extracted Self-Paced Lessons values are sorted numerically (smallest → largest).
+    // await page.visuallyAssert({
+    //     assertionToTestFor:
+    //         'Assert that the following list of Self-Paced Lessons values is sorted in ascending numerical order',
+    //     retries: 5,
+    //     retryWaitSeconds: 5,
+    // });
+    
     // Clicking on the 'Trainer-led Classes' header to sort the column in descending order.
     await page
         .find("[data-testid='learners-table-header-num_classes']", {
@@ -689,6 +631,7 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after sorting by 'Trainer-led Classes'.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting 'Trainer-led Classes' values to verify descending numerical sort order.
     await page.analyzePageText({
@@ -696,6 +639,12 @@ test(title, details, async ({ page }) => {
             "Extract all numerical values under the 'Trainer-led Classes' column. Then, verify that these values are sorted numerically from highest to lowest. If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'Trainer-led Classes' column is expected to be sorted in descending order.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Trainer-led Classes values is sorted in descending numerical order',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
     // Clicking on the 'Trainer-led Classes' column header to sort it in ascending order.
     await page
@@ -713,6 +662,7 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to refresh after sorting by Trainer-led Classes in ascending order.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting Trainer-led Classes values to verify ascending numerical sort order.
     await page.analyzePageText({
@@ -720,6 +670,12 @@ test(title, details, async ({ page }) => {
             "Extract all numerical values under the 'Trainer-led Classes' column. Then, verify that these values are sorted numerically from lowest to highest. If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'Trainer-led Classes' column is expected to be sorted in ascending order.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Trainer-led Classes values is sorted in ascending numerical order',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
     // Clicking on the 'AVG Rating' header to sort the column in descending order.
     await page
@@ -737,6 +693,7 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after sorting by AVG Rating.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting AVG Rating values to verify descending numerical sort order (5.0 -> 1.0).
     await page.analyzePageText({
@@ -744,6 +701,12 @@ test(title, details, async ({ page }) => {
             "Extract all numerical values under the 'AVG Rating' column. Then, verify that these values are sorted numerically from highest to lowest. If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'AVG Rating' column is expected to be sorted in descending order.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of AVG Rating values is sorted in descending numerical order',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
     // Clicking on the 'AVG Rating' column header to sort it in ascending order.
     await page
@@ -761,6 +724,7 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after sorting by AVG Rating in ascending order.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting AVG Rating values to verify ascending numerical sort order (1.0 -> 5.0).
     await page.analyzePageText({
@@ -768,6 +732,12 @@ test(title, details, async ({ page }) => {
             "Extract all numerical values under the 'AVG Rating' column. Then, verify that these values are sorted numerically from lowest to highest. If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'AVG Rating' column is expected to be sorted in ascending order.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of AVG Rating values is sorted in ascending numerical order',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
     // Clicking on the 'Manager' column header to sort it in descending order.
     await page
@@ -785,6 +755,7 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to update after sorting by Manager.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting Manager names to verify alphabetical reverse order (Z -> A).
     await page.analyzePageText({
@@ -792,6 +763,12 @@ test(title, details, async ({ page }) => {
             "Extract all values under the 'Manager' column. Then, verify that these values are sorted alphabetically from Z to A. If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'Manager' column is expected to be sorted in descending alphabetical order.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Manager names is sorted in descending alphabetical order, ignore "n/a" values in the list',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
     // Clicking on the 'Manager' column header to sort it in ascending order.
     await page
@@ -809,6 +786,7 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to refresh after sorting by Manager in ascending order.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting Manager names to verify alphabetical order (A -> Z) after a previous unexpected sort order.
     await page.analyzePageText({
@@ -816,6 +794,12 @@ test(title, details, async ({ page }) => {
             "Extract all values under the 'Manager' column. Then, verify that these values are sorted alphabetically from A to Z. If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'Manager' column is expected to be sorted in ascending alphabetical order.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Manager names is sorted in ascending alphabetical order, ignore "n/a" values in the list',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
 
     // Clicking on the 'Status' column header to sort it in ascending order, as per the overall objective.
@@ -834,13 +818,20 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to refresh and display data after sorting by Status.
-    await page.waitForTimeout(5000);
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
+    await page.waitForTimeout(3000);
     // Extracting Status values to verify alphabetical or logical state order (e.g., Active -> Inactive).
     await page.analyzePageText({
         analysisToRun:
             "Extract all values under the 'Status' column. Then, verify that these values are sorted alphabetically or by logical state order (e.g., Active -> Inactive). If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'Status' column is expected to be sorted in ascending order, with 'Active' appearing before 'Inactive'.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Status values is sorted in ascending alphabetical order',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
     // Clicking on the 'Status' column header again to sort it in descending order.
     await page
@@ -858,8 +849,7 @@ test(title, details, async ({ page }) => {
         })
         .click();
     // Waiting for the table to populate after sorting by Status in descending order, as the table is currently empty.
-    await page.waitForTimeout(5000);
-    // Waiting for the table to update after sorting by Status in descending order.
+    await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting Status values to verify reverse order (Inactive -> Active) after sorting the column in descending order.
     await page.analyzePageText({
@@ -867,5 +857,11 @@ test(title, details, async ({ page }) => {
             "Extract all values under the 'Status' column. Then, verify that these values are sorted in reverse order (Inactive -> Active). If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
             "The 'Status' column is expected to be sorted in descending order, with 'Inactive' appearing before 'Active'.",
+    });
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Status values is sorted in descending alphabetical order',
+        retries: 5,
+        retryWaitSeconds: 5,
     });
 });

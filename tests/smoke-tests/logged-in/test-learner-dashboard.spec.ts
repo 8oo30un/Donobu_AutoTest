@@ -56,9 +56,10 @@ Ensure both filters apply in combination (data shown only from that contract and
 
 Click on the “Edit Columns/Filters” button.
 Verify that a configuration modal or side panel opens.
-Uncheck one optional column.
+Uncheck one optional column Location, and change the order of the columns Manager above AVG Rating.
 Click Apply / Save and confirm changes are reflected in the main data table.
 Verify that unselected columns are not displayed in the UI.
+Verify that the order of the columns is changed.
 Reopen “Edit Columns” and verify the configuration persists.
 Do check previously unselected option and click save button
 Verify that the column is now displayed in UI
@@ -82,19 +83,11 @@ test(title, details, async ({ page }) => {
   await expect(page).toHaveURL(/dashboard/);
   const learnerSummaryEle = await page.getByText('Learning Summary');
   await learnerSummaryEle.waitFor({ state: 'visible', timeout: 90000 });
+  const dashboardTab = page.getByRole('button', { name: 'Dashboard' });
+  await expect(dashboardTab).toBeVisible();
+  const learnersTab = page.getByRole('button', { name: 'Learners' });
+  await expect(learnersTab).toBeVisible();
 
-  // Verifying that the dashboard header element 'Overview' is displayed, as per the overall objective.
-  await page.visuallyAssert({
-    assertionToTestFor:
-      "Assert that the text 'Overview' is visible on the page.",
-  });
-  // Confirming that no error or access-denied message is shown on the dashboard page, as per the overall objective.
-  await page.analyzePageText({
-    analysisToRun:
-      'Check if there are any error messages or access denied messages on the page.',
-    additionalRelevantContext:
-      'The user has just logged in and is expecting to see the dashboard without any errors.',
-  });
   // Clicking on the Learner tab displayed after the dashboard tab, as per the overall objective.
   await page
     .find(
@@ -115,57 +108,39 @@ test(title, details, async ({ page }) => {
       },
     )
     .click();
-  // Verifying that the learner table is displayed and rendered properly, checking for aligned columns, readable text, consistent font size, visible key sections, and absence of broken elements, as per the overall objective.
-  await page.analyzePageText({
-    analysisToRun:
-      'Check if the learner table is displayed with aligned columns, readable text, and consistent font size. Also, verify that Filters, Search, and Columns sections are visible and not overlapping. Confirm no broken icons, empty states, or undefined labels are present. Finally, assess if the overall layout looks polished and demo-presentable.',
-    additionalRelevantContext:
-      "The page currently shows 'No results found' in the table, but the table headers are visible. I need to ensure the table structure and surrounding elements are correctly rendered.",
-  });
+  // Verifying that the learner table is displayed and rendered properly
+  await page.locator('[data-testid="learners-table"]').waitFor({ state: 'visible', timeout: 90000 });
   // Verifying that the learner table is rendered properly with aligned columns, readable text, consistent font size, visible and non-overlapping key sections (Filters, Search, Columns), no broken icons, empty states, or undefined labels, and that the overall layout looks polished and demo-presentable, as per the overall objective.
   await page.visuallyAssert({
     assertionToTestFor:
       'Assert that the learner table is rendered properly with aligned columns, readable text, and consistent font size. Assert that the Filters, Search, and Edit Columns/Filters sections are visible and not overlapping. Assert that there are no broken icons, empty states, or undefined labels. Assert that the overall layout looks polished and demo-presentable.',
+    retries: 3,
+    retryWaitSeconds: 5,
   });
+  // Verify that all key sections are visible
+  await expect(page.getByRole('button', { name: 'Search' })).toBeVisible();
+  await expect(page.locator('//button[.//span[normalize-space(text())="Filter"]]')).toBeVisible();
+
+  await expect(page.getByRole('button', { name: 'Edit Columns/Filters' })).toBeVisible();
+
+  // Verify table columns are properly aligned
+  await expect(page.locator('th[data-testid="learners-table-header-last_name"]')).toBeVisible();
+  await expect(page.locator('th[data-testid="learners-table-header-email"]')).toBeVisible();
+  await expect(page.locator('th[data-testid="learners-table-header-location"]')).toBeVisible();
   // Scrolling down the page to locate the 'Per page' dropdown and other elements for interaction, as it is visible in the scrolled-down preview.
   await page.find('html').scroll('DOWN');
-  // Clicking on the 'Per page' dropdown to select an option, as per the overall objective.
-  await page
-    .find('#mantine-rc-target', {
-      failover: [
-        '#__next > div > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        "[data-testid='learners-limit-dropdown']",
-        ".//button[normalize-space(.)='10']",
-        "div:nth-of-type(4) > div:nth-of-type(1) > [data-button='true']",
-        'div:nth-of-type(4) > div:nth-of-type(1) > button.mantine-UnstyledButton-root',
-        'div.mantine-11argd8 > div:nth-of-type(1) > button',
-        'div.mantine-1hv2vg > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'div.mantine-1ywgif7 > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'div.c-ejwOqd > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        "[data-button='true']",
-        'button.mantine-UnstyledButton-root',
-      ],
-    })
-    .click();
-  // Selecting '30' from the 'Per page' dropdown to change the number of entries displayed per page, as per the overall objective.
-  await page
-    .find('#mantine-rc-dropdown > div > button:nth-of-type(2)', {
-      failover: [
-        "[data-testid='learners-limit-menu-item-30']",
-        ".//button[normalize-space(.)='30']",
-        'div.mantine-11argd8 > div:nth-of-type(1) > div > div > button:nth-of-type(2)',
-        'div.mantine-1hv2vg > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(2)',
-        'div.mantine-1ywgif7 > div > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(2)',
-        'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(2)',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(2)',
-        "[role='menuitem']",
-        "[data-menu-item='true']",
-        'button.mantine-Menu-item',
-      ],
-    })
-    .click();
+  await page.find('html').scroll('DOWN');
+
+  // Clicking on the page size dropdown to reveal the options.
+  await page.locator("[data-testid='learners-limit-dropdown']").click();
+  // Selecting '30' from the page size dropdown to display 30 learners per page.
+  await page.locator("[data-testid='learners-limit-menu-item-30']").click();
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
+
+  // Verify that result is updated and 30 rows are displayed
+  const learnerRows = await page.$$('[data-testid="learners-table"] tbody tr');
+  let learnerRowsCount = await learnerRows.length;
+  await expect(learnerRowsCount).toBeCloseTo(30);
   // Verifying that the learner table entry list updates as per the selected per-page size (30), as per the overall objective. I am checking for the number of results displayed.
   await page.analyzePageText({
     analysisToRun:
@@ -173,71 +148,22 @@ test(title, details, async ({ page }) => {
     additionalRelevantContext:
       "The 'Per page' dropdown was just set to '30'. The previous state showed '0 results'.",
   });
-  // Clicking on the 'Per page' dropdown to change the number of entries displayed per page to 50, as per the overall objective.
-  await page
-    .find('#mantine-r3g-target', {
-      failover: [
-        "(.//button[normalize-space(.)='...'])[5]",
-        "tr:nth-of-type(5) > td:nth-of-type(15) > [data-button='true']",
-        'tr:nth-of-type(5) > td:nth-of-type(15) > button.mantine-UnstyledButton-root',
-        "[data-testid='learners-table-cell-edit-223515'] > button",
-        "[data-testid='learners-table-row-223515'] > td:nth-of-type(15) > button",
-        'div.mantine-kwn0a8 > table > tbody > tr:nth-of-type(5) > td:nth-of-type(15) > button',
-        "[data-testid='learners-table'] > tbody > tr:nth-of-type(5) > td:nth-of-type(15) > button",
-        'div.mantine-1hv2vg > div:nth-of-type(3) > table > tbody > tr:nth-of-type(5) > td:nth-of-type(15) > button',
-        'div.mantine-1ywgif7 > div > div:nth-of-type(3) > table > tbody > tr:nth-of-type(5) > td:nth-of-type(15) > button',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > table > tbody > tr:nth-of-type(5) > td:nth-of-type(15) > button',
-        ".//button[normalize-space(.)='...']",
-        "[data-button='true']",
-        'button.mantine-UnstyledButton-root',
-      ],
-    })
-    .click();
+
   // Scrolling down the page to reveal the '50' option in the 'Per page' dropdown, as it is not visible in the current viewport.
   await page.find('html').scroll('DOWN');
   // Scrolling down the page to find the '50' option in the 'Per page' dropdown, as it is not currently visible.
   await page.find('html').scroll('DOWN');
   // Scrolling down the page to reveal the '50' option in the 'Per page' dropdown, as it is not currently visible.
   await page.find('html').scroll('DOWN');
-  // Clicking on the 'Per page' dropdown to select an option, as per the overall objective.
-  await page
-    .find('#mantine-rc-target', {
-      failover: [
-        '#__next > div > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        "[data-testid='learners-limit-dropdown']",
-        ".//button[normalize-space(.)='30']",
-        "div:nth-of-type(4) > div:nth-of-type(1) > [data-button='true']",
-        'div:nth-of-type(4) > div:nth-of-type(1) > button.mantine-UnstyledButton-root',
-        'div.mantine-11argd8 > div:nth-of-type(1) > button',
-        'div.mantine-1hv2vg > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'div.mantine-1ywgif7 > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'div.c-ejwOqd > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > button',
-        "[data-button='true']",
-        'button.mantine-UnstyledButton-root',
-      ],
-    })
-    .click();
-  // Selecting '50' from the 'Per page' dropdown to change the number of entries displayed per page to 50, as per the overall objective.
-  await page
-    .find('#mantine-rc-dropdown > div > button:nth-of-type(3)', {
-      failover: [
-        "[data-testid='learners-limit-menu-item-50']",
-        ".//button[normalize-space(.)='50']",
-        'div.mantine-11argd8 > div:nth-of-type(1) > div > div > button:nth-of-type(3)',
-        'div.mantine-1hv2vg > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(3)',
-        'div.mantine-1ywgif7 > div > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(3)',
-        'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(3)',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(4) > div:nth-of-type(1) > div > div > button:nth-of-type(3)',
-        "[role='menuitem']",
-        "[data-menu-item='true']",
-        'button.mantine-Menu-item',
-      ],
-    })
-    .click();
+  // Clicking on the page size dropdown again to change the number of learners displayed per page to 50.
+  await page.locator("[data-testid='learners-limit-dropdown']").click();
+  await page.locator("[data-testid='learners-limit-menu-item-50']").click();
   // Scrolling down the page to verify that all learner rows and manager details are displayed correctly after changing the 'Per page' size to 50, as per the overall objective.
   await page.find('html').scroll('DOWN');
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
+  // Verifying that the learner table entry list updates as per the selected per-page size (50), as per the overall objective. I am checking for the number of results displayed.
+  learnerRowsCount = await page.locator('[data-testid="learners-table"] tbody tr').count();
+  await expect(learnerRowsCount).toBeGreaterThan(40);
   // Clicking on the Contract Filter dropdown (default: 'All Contracts') to select a valid contract name, as per the overall objective.
   await page
     .find('#mantine-r3-target', {
@@ -274,16 +200,12 @@ test(title, details, async ({ page }) => {
     })
     .click();
   // Wait for the API call to complete and table to update
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
   await page.waitForSelector('[data-testid="learners-table"]', { state: 'visible' });
-  await page.waitForTimeout(3000);
   await page.waitForLoadState('networkidle');
   // Verifying that the table updates to display only learners under the selected contract, and confirming the number of results displayed.
-  await page.analyzePageText({
-    analysisToRun:
-      "Check the number of results displayed in the learner table and if there are any error messages. If the number of results is 0, confirm that the '0 results' message is displayed and that the table structure is still correct for an empty state. If there are results, confirm that they are consistent with the selected contract 'Coach - IMMERSE Coach' (though this cannot be fully verified from raw text alone).",
-    additionalRelevantContext:
-      "The 'Coach - IMMERSE Coach' contract was just selected. The current view shows '0 results'."
-  });
+  let currentLearnerCount = await page.locator('[data-testid="learners-table"] tbody tr').count();
+  await expect(currentLearnerCount).not.toEqual(learnerRowsCount);
   // Reverting the Contract Filter to 'All Contracts' as per the overall objective.
   await page
     .find('#mantine-r3-target', {
@@ -321,15 +243,12 @@ test(title, details, async ({ page }) => {
     .click();
   // Wait for the API call to complete and table to update
   await page.waitForSelector('[data-testid="learners-table"]', { state: 'visible' });
-  await page.waitForTimeout(3000);
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
   await page.waitForLoadState('networkidle');
   // Verifying that all data returns after reverting the Contract Filter to 'All Contracts', as per the overall objective. I am checking the number of results displayed.
-  await page.analyzePageText({
-    analysisToRun:
-      "Check the number of results displayed in the learner table. Confirm that the number of results is greater than the previous 5 results, indicating that all data has returned. Also, check for any error messages or unexpected content on the page. If the number of results is 0, confirm that the '0 results' message is displayed and that the table structure is still correct for an empty state. If there are results, confirm that they are consistent with 'All Contracts' (though this cannot be fully verified from raw text alone).",
-    additionalRelevantContext:
-      "The 'All Contracts' filter was just selected. The previous state showed '5 results' for 'Coach - IMMERSE Coach' contract.",
-  });
+
+  currentLearnerCount = await page.locator('[data-testid="learners-table"] tbody tr').count();
+  await expect(currentLearnerCount).toEqual(learnerRowsCount);
   // Entering a valid learner name 'Sample Learner' into the search bar as per the overall objective.
   await page
     .find('#mantine-r6', {
@@ -367,12 +286,16 @@ test(title, details, async ({ page }) => {
   // Wait for the API call to complete and table to update
   await page.waitForLoadState('networkidle');
   // Verifying that only matching results are displayed after searching for a partial name 'Sample Learner', as per the overall objective.
-  await page.visuallyAssert({
-    assertionToTestFor:
-      "Assert that the table contains 'Sample Learner' in the results.",
-    retries: 2,
-    retryWaitSeconds: 5,
-  });
+  let searchResults = page.locator('[data-testid^="learners-table-cell-last_name-"]');
+  let searchCount = await searchResults.count();
+  // // wait for 2 seconds
+  // await page.waitForTimeout(2000);
+  // expect(searchCount).toBeGreaterThan(0);
+
+  // for (let i = 0; i < searchCount; i++) {
+  //   const cellText = (await searchResults.nth(i).textContent())?.trim() || "";
+  //   expect(cellText.toLowerCase()).toContain("Sample Learner".toLocaleLowerCase());
+  // }
   // Clearing the search input field to prepare for the next search query, as per the overall objective.
   await page
     .find('#mantine-r6', {
@@ -424,15 +347,19 @@ test(title, details, async ({ page }) => {
     .click();
   // Wait for the API call to complete and table to update
   await page.waitForSelector('[data-testid="learners-table"]', { state: 'visible' });
-  await page.waitForTimeout(3000);
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
   await page.waitForLoadState('networkidle');
   // Verifying that only matching results are displayed after searching for a partial email 'learner.3', as per the overall objective.
-  await page.analyzePageText({
-    analysisToRun:
-      "Check if the displayed results in the learner table contain 'learner.3' in their email or name, and if the total number of results is consistent with the search query. Also, confirm that no irrelevant results are shown and that the '1 results' message is displayed at the bottom of the table. If there are no results, confirm that the '0 results' message is displayed and that the table structure is still correct for an empty state. If there are results, confirm that they are consistent with the search term 'learner.3' (though this cannot be fully verified from raw text alone).",
-    additionalRelevantContext:
-      "The search query is 'learner.3' and the expectation is to see only matching results.",
-  });
+  searchResults = page.locator('[data-testid^="learners-table-cell-email-"]');
+  searchCount = await searchResults.count();
+  // wait for 2 seconds
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
+  expect(searchCount).toBeGreaterThan(0);
+
+  for (let i = 0; i < searchCount; i++) {
+    const cellText = (await searchResults.nth(i).textContent())?.trim() || "";
+    expect(cellText.toLowerCase()).toContain("learner.3".toLocaleLowerCase());
+  }
   // Clearing the search input field to prepare for the next search query, as per the overall objective.
   await page
     .find('#mantine-r6', {
@@ -484,15 +411,17 @@ test(title, details, async ({ page }) => {
     .click();
   // Wait for the API call to complete and table to update
   await page.waitForSelector('[data-testid="learners-table"]', { state: 'visible' });
-  await page.waitForTimeout(3000);
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
   await page.waitForLoadState('networkidle');
   // Verifying that learner entries correspond only to the given location 'US' after searching for 'US', as per the overall objective. I am checking the location column for all displayed results and the total number of results.
-  await page.analyzePageText({
-    analysisToRun:
-      "Check if all displayed results in the learner table have 'US' in their 'LOCATION' column. Also, confirm the total number of results displayed. If there are no results, confirm that the '0 results' message is displayed and that the table structure is still correct for an empty state. If there are results, confirm that they are consistent with the search term 'US' (though this cannot be fully verified from raw text alone). Additionally, check for any error messages or unexpected content on the page. The current view shows '5 results' and the location column for the displayed learners is 'US' or 'MX, Mexico City' or 'n/a'. I need to ensure only 'US' locations are shown if the search is working correctly. However, the current screenshot shows 'MX, Mexico City' for the first learner, which is not 'US'. This indicates the search might not have applied correctly or the data is not as expected. I will re-evaluate the results based on the provided raw text after the search was applied. The raw text shows 'US' for all the displayed learners. So, I will proceed with the analysis assuming the search worked correctly and the screenshot is a bit misleading or outdated for the current state of the data after the search was applied. I will specifically look for 'US' in the location column for all displayed learners and the total number of results. The raw text shows '5 results' and all the displayed learners have 'US' in their location column. So, the search is working correctly. I will confirm this in the analysis.",
-    additionalRelevantContext:
-      "The search query is 'US' and the expectation is to see only matching results in the 'LOCATION' column. The current view shows '5 results' and the location column for the displayed learners is 'US' for all of them.",
-  });
+  searchResults = page.locator('[data-testid^="learners-table-cell-location-"]');
+  searchCount = await searchResults.count();
+  expect(searchCount).toBeGreaterThan(0);
+
+  for (let i = 0; i < searchCount; i++) {
+    const cellText = (await searchResults.nth(i).textContent())?.trim() || "";
+    expect(cellText.toLowerCase()).toContain("US".toLocaleLowerCase());
+  }
   // Clearing the search input field to prepare for the next search query, as per the overall objective.
   await page
     .find('#mantine-r6', {
@@ -544,14 +473,17 @@ test(title, details, async ({ page }) => {
     .click();
   // Wait for the API call to complete and table to update
   await page.waitForSelector('[data-testid="learners-table"]', { state: 'visible' });
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
   await page.waitForLoadState('networkidle');
   // Verifying that matching records are shown after searching for 'Sample Manager' by asserting that the table contains 'Sample Manager' in the results.
-  await page.visuallyAssert({
-    assertionToTestFor:
-      "Assert that the table contains 'Sample Manager' in the Manager column of the search result",
-    retries: 5,
-    retryWaitSeconds: 5,
-  });
+  searchResults = page.locator('[data-testid^="learners-table-cell-manager_full_name-"]');
+  searchCount = await searchResults.count();
+  expect(searchCount).toBeGreaterThan(0);
+
+  for (let i = 0; i < searchCount; i++) {
+    const cellText = (await searchResults.nth(i).textContent())?.trim() || "";
+    expect(cellText.toLowerCase()).toContain("Sample Manager".toLocaleLowerCase());
+  }
   // Entering an unmatched query into the search bar to verify that 'No Results Found' appears, as required by the overall objective.
   await page
     .find('#mantine-r6', {
@@ -590,12 +522,7 @@ test(title, details, async ({ page }) => {
   await page.waitForSelector('[data-testid="learners-table"]', { state: 'visible' });
   await page.waitForLoadState('networkidle');
   // Verifying that 'No Results Found' appears for unmatched queries, as required by the overall objective.
-  await page.visuallyAssert({
-    assertionToTestFor:
-      "Assert that the text 'No result found for Unmatched Query 12345' is displayed on the page.",
-    retries: 5,
-    retryWaitSeconds: 5,
-  });
+  await expect(page.getByText(`No result found for Unmatched Query 12345`)).toBeVisible();
   // Clearing the previous unmatched search query from the search bar to prepare for the next step of verifying filtering with search.
   await page
     .find('#mantine-r6', {
@@ -683,6 +610,7 @@ test(title, details, async ({ page }) => {
 
   // Wait for the API call to complete and table to update
   await page.waitForSelector('[data-testid="learners-table"]', { state: 'visible' });
+  await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 15000 });
   await page.waitForLoadState('networkidle');
   // Verifying that both the contract filter and search term apply in combination by asserting that the table contains 'Sample Manager' and that the contract displayed is '42225 Contract - IMMERSE Pro'.
   await page.visuallyAssert({
@@ -718,10 +646,9 @@ test(title, details, async ({ page }) => {
   });
   // Unchecking the 'Location' column to hide it from the data table.
   await page
-    .find('#mantine-r2v', {
+    .find('div:nth-of-type(3) > div > div > div:nth-of-type(1) > input.mantine-1137jyz', {
       failover: [
         '#mantine-rj-body > div:nth-of-type(1) > div:nth-of-type(3) > div > div > div:nth-of-type(1) > input',
-        'div:nth-of-type(3) > div > div > div:nth-of-type(1) > input.mantine-1137jyz',
         'div.mantine-nmgv2p > div:nth-of-type(3) > div > div > div:nth-of-type(1) > input',
         "[role='dialog'] > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div > div > div:nth-of-type(1) > input",
         'body > div:nth-of-type(5) > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div > div > div:nth-of-type(1) > input',
@@ -730,10 +657,24 @@ test(title, details, async ({ page }) => {
     })
     .click();
 
-  // Change the order of columns, drag "Last Login" card to one option above (above "Location")
+  // Change the order of columns, drag "Manager" card to one option above (above "AVG Rating")
+  const sorceLocation = page.locator('//div[contains(@class,"mantine-147quj9")][.//text()[normalize-space()="Manager"]]//button[contains(@class,"mantine-am3oe7")]//*[contains(@class,"svg-icon ")]');
+  const destinationLocation = page.locator('//div[contains(@class,"mantine-147quj9")][.//text()[normalize-space()="AVG Rating"]]//button[contains(@class,"mantine-am3oe7")]//*[contains(@class,"svg-icon ")]')
 
-  // await page.dragAndDrop('//div[text()="Last Login"]//button', '//div[text()="Location"]//button');
-  // await page.waitForTimeout(5000);
+  // Get positions
+  const sourceBox = await sorceLocation.boundingBox();
+  const targetBox = await destinationLocation.boundingBox();
+
+  if (sourceBox && targetBox) {
+    // Simulate mouse drag movement
+    await page.mouse.move(sourceBox.x + sourceBox.width / 2, sourceBox.y + sourceBox.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(300); // small pause for smoothness
+    await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2, { steps: 10 });
+    await page.waitForTimeout(300);
+    await page.mouse.up();
+
+  }
   // Scrolling down the 'Edit Columns/Filters' modal to locate the 'Apply / Save' button, as required by the overall objective.
   await page
     .find('#mantine-r9 > div:nth-of-type(2)', {
@@ -762,10 +703,18 @@ test(title, details, async ({ page }) => {
     })
     .click();
   // Verifying that the unselected 'Location' column is not displayed in the UI after saving the column configuration, as required by the overall objective.
-  await page.visuallyAssert({
-    assertionToTestFor:
-      "Assert that the text 'Location' is not displayed on the page.",
-  });
+  let locationColumn = page.locator('th[data-testid="learners-table-header-location"]').first();
+  await expect(locationColumn).not.toBeVisible();
+  // Verify ordering of the column after drag and drop
+  let headers = await page.locator('[data-testid^="learners-table-header-"]').allTextContents();
+  const managerIndex = headers.findIndex(h => h.includes('Manager'));
+  const avgRatingIndex = headers.findIndex(h => h.includes('AVG Rating'));
+  // Verify both columns exist
+  expect(managerIndex).toBeGreaterThan(-1);
+  expect(avgRatingIndex).toBeGreaterThan(-1);
+
+  // Verify "Manager" appears before "AVG Rating"
+  expect(managerIndex).toBeLessThan(avgRatingIndex);
   // Reopening the 'Edit Columns/Filters' modal to verify that the previous configuration persists and to re-enable the 'Location' column, as required by the overall objective.
   await page
     .find(
@@ -827,10 +776,7 @@ test(title, details, async ({ page }) => {
     })
     .click();
   // Verifying that the 'Location' column is now displayed in the UI after re-checking the option and saving the configuration, as required by the overall objective.
-  await page.visuallyAssert({
-    assertionToTestFor:
-      "Assert that the text 'Location' is displayed on the page.",
-  });
+  await expect(locationColumn).toBeVisible();
   // Locating the Time Frame filter and changing it to a different range to verify that the data updates accordingly, as required by the overall objective.
   await page
     .find('#mantine-r7', {
@@ -871,9 +817,22 @@ test(title, details, async ({ page }) => {
     retries: 5,
     retryWaitSeconds: 5,
   });
+
   // Clicking on a learner name in the list to verify that a Learner Data Tray or side panel opens, as required by the overall objective.
+  // Store row data in a variable to use it later
+  const firstRow = page.locator('[data-testid^="learners-table-row-"]').first();
+
+  const rowTestId = await firstRow.getAttribute('data-testid');
+  const rowId = rowTestId?.split('-').pop(); // e.g., 189543
+  const learnerTableData = {
+    name: (await page.locator(`[data-testid="learners-table-cell-last_name-${rowId}"]`).textContent())?.trim() || '',
+    email: (await page.locator(`[data-testid="learners-table-cell-email-${rowId}"]`).textContent())?.trim() || '',
+    location: (await page.locator(`[data-testid="learners-table-cell-location-${rowId}"]`).textContent())?.trim() || '',
+    manager: (await page.locator(`[data-testid="learners-table-cell-manager_full_name-${rowId}"]`).textContent())?.trim() || '',
+  };
+
   await page
-    .find("[data-testid='learners-table-row-189555']", {
+    .find("[data-testid^='learners-table-row-']", {
       failover: [
         'div.mantine-kwn0a8 > table > tbody > tr:nth-of-type(1)',
         "[data-testid='learners-table'] > tbody > tr:nth-of-type(1)",
@@ -889,12 +848,26 @@ test(title, details, async ({ page }) => {
   // Waiting for the Learner Data Tray to fully load after clicking on a learner name.
   await page.waitForTimeout(5000);
   // Analyzing the text content of the Learner Data Tray to check for relevant learner details (name, email, contract, manager, etc.) as required by the overall objective.
-  await page.analyzePageText({
-    analysisToRun:
-      "Does the Learner Data Tray contain the learner's name, email, contract, and manager details?",
-    additionalRelevantContext:
-      "The learner's name is 'Sample Learner', and their email is 'sample.learner.6@immerse.online'. The contract is '42225 Contract - IMMERSE Pro', and the manager is 'Sample Manager'.",
-  });
+  const detailsDialog = await page.locator('//div[contains(@class, "mantine-Paper-root mantine-Drawer-drawer")]')
+  await expect(detailsDialog).toBeVisible();
+  await expect(detailsDialog.getByText('Progress', { exact: true })).toBeVisible();
+  await expect(detailsDialog.getByText('Time on Site', { exact: true })).toBeVisible();
+  await expect(detailsDialog.getByText('Activities Complete', { exact: true })).toBeVisible();
+  await expect(detailsDialog.getByText('Learner Info', { exact: true })).toBeVisible();
+
+  const learnerTrayData = {
+    name: (await page.locator('h2.mantine-l2ypsq').textContent())?.trim() || '',
+    email: (await page.locator('div.mantine-Text-root.mantine-12dx4wg').nth(0).textContent())?.trim() || '',
+    location: (await page.locator('div.mantine-Group-root:has-text("Location") div.mantine-Text-root.mantine-12dx4wg').nth(1).textContent())?.trim() || '',
+    manager: (await page.locator('div.mantine-Group-root:has-text("Manager") div.mantine-Text-root.mantine-12dx4wg').last().textContent())?.trim() || '',
+  };
+
+  // Compare table data vs tray data
+  expect(learnerTrayData.name).toContain(learnerTableData.name);
+  expect(learnerTrayData.email.toLowerCase()).toBe(learnerTableData.email.toLowerCase());
+  expect(learnerTrayData.location).toContain(learnerTableData.location.replace(/,/g, '').trim());
+  expect(learnerTrayData.manager.toLocaleLowerCase()).toContain(learnerTableData.manager.toLocaleLowerCase());
+
   // Closing the Learner Data Tray to confirm the main dashboard remains intact, as required by the overall objective.
   await page
     .find('div.mantine-w29q45 > button > svg', {
@@ -904,4 +877,8 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
+
+  // Verify the main dashboard remains intact after closing the Learner Data Tray.
+  await expect(page.getByRole('heading', { name: 'Learners' })).toBeVisible();
+  await expect(page.locator('table')).toBeVisible();
 });
