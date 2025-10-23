@@ -224,6 +224,11 @@ test(title, details, async ({ page }) => {
         last7DaysLoggedInPercent?.trim() !== initialLoggedInPercent?.trim() ||
         last7DaysAttendedPercent?.trim() !== initialAttendedPercent?.trim();
     expect(timeFrameMetricsChanged).toBe(true);
+    await page.visuallyAssert({
+        assertionToTestFor: 'Assert that the dashboard updates with a new data set with date range of last 7 days',
+        retries: 5,
+        retryWaitSeconds: 5,
+    });
 
     // Clicking the Time Frame dropdown again to select "Last 30 days" and revert the dashboard to its initial state data range.
     await page

@@ -568,19 +568,19 @@ test(title, details, async ({ page }) => {
     await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting Self-Paced Lessons values to verify that counts are sorted numerically (largest → smallest).
-    // await page.analyzePageText({
-    //     analysisToRun:
-    //         "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
-    //     additionalRelevantContext:
-    //         'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
-    // });
-    // // Verifying that the extracted Self-Paced Lessons values are sorted numerically (largest → smallest).
-    // await page.visuallyAssert({
-    //     assertionToTestFor:
-    //         'Assert that the following list of Self-Paced Lessons values is sorted in descending numerical order',
-    //     retries: 5,
-    //     retryWaitSeconds: 5,
-    // });
+    await page.analyzePageText({
+        analysisToRun:
+            "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
+        additionalRelevantContext:
+            'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
+    });
+    // Verifying that the extracted Self-Paced Lessons values are sorted numerically (largest → smallest).
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Self-Paced Lessons values is sorted in descending numerical order',
+        retries: 5,
+        retryWaitSeconds: 5,
+    });
 
     // Clicking on the Self-Paced Lessons header to sort ascending.
     await page
@@ -601,20 +601,20 @@ test(title, details, async ({ page }) => {
     await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
     await page.waitForTimeout(3000);
     // Extracting Self-Paced Lessons values again to verify that the counts are sorted numerically (smallest → largest) after clicking the header.
-    // await page.analyzePageText({
-    //     analysisToRun:
-    //         "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
-    //     additionalRelevantContext:
-    //         'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
-    // });
-    // // Verifying that the extracted Self-Paced Lessons values are sorted numerically (smallest → largest).
-    // await page.visuallyAssert({
-    //     assertionToTestFor:
-    //         'Assert that the following list of Self-Paced Lessons values is sorted in ascending numerical order',
-    //     retries: 5,
-    //     retryWaitSeconds: 5,
-    // });
-    
+    await page.analyzePageText({
+        analysisToRun:
+            "Extract all the text content from the 'Self-Paced Lessons' column of the learner table. The Self-Paced Lessons values are in the eighth column of the table. Each row starts with a tab character and the Self-Paced Lessons value is the ninth tab-separated field (index 8).",
+        additionalRelevantContext:
+            'The table rows are identified by data-testid="learners-table-row-...". The Self-Paced Lessons is the eighth text element in each row.',
+    });
+    // Verifying that the extracted Self-Paced Lessons values are sorted numerically (smallest → largest).
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that the following list of Self-Paced Lessons values is sorted in ascending numerical order',
+        retries: 5,
+        retryWaitSeconds: 5,
+    });
+
     // Clicking on the 'Trainer-led Classes' header to sort the column in descending order.
     await page
         .find("[data-testid='learners-table-header-num_classes']", {

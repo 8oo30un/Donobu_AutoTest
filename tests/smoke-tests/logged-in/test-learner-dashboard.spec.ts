@@ -264,7 +264,7 @@ test(title, details, async ({ page }) => {
       ],
     })
     .inputText('Sample Learner');
-  // Clicking the Search button to apply the filter for 'Sample Tester' as per the overall objective.
+  // Clicking the Search button to apply the filter for 'Sample Learner' as per the overall objective.
   await page
     .find(
       '#__next > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)',
@@ -288,14 +288,14 @@ test(title, details, async ({ page }) => {
   // Verifying that only matching results are displayed after searching for a partial name 'Sample Learner', as per the overall objective.
   let searchResults = page.locator('[data-testid^="learners-table-cell-last_name-"]');
   let searchCount = await searchResults.count();
-  // // wait for 2 seconds
-  // await page.waitForTimeout(2000);
-  // expect(searchCount).toBeGreaterThan(0);
+  // wait for 2 seconds
+  await page.waitForTimeout(2000);
+  expect(searchCount).toBeGreaterThan(0);
 
-  // for (let i = 0; i < searchCount; i++) {
-  //   const cellText = (await searchResults.nth(i).textContent())?.trim() || "";
-  //   expect(cellText.toLowerCase()).toContain("Sample Learner".toLocaleLowerCase());
-  // }
+  for (let i = 0; i < searchCount; i++) {
+    const cellText = (await searchResults.nth(i).textContent())?.trim() || "";
+    expect(cellText.toLowerCase()).toContain("Sample Learner".toLocaleLowerCase());
+  }
   // Clearing the search input field to prepare for the next search query, as per the overall objective.
   await page
     .find('#mantine-r6', {
