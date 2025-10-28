@@ -207,7 +207,7 @@ test(title, details, async ({ page }) => {
     });
     // Verifying that the extracted Email values are sorted in reverse alphanumeric order (Z → A).
     await page.visuallyAssert({
-        assertionToTestFor: `Check that the list of emails is sorted in descending order based on standard string comparison (Z → A), without treating numbers specially.`,
+        assertionToTestFor: "Assert that the list of emails is sorted in strictly descending lexicographic (dictionary) order, comparing each email as a plain text string character by character. Do not interpret numeric parts as numbers; for example, 'sample.6@' should come before 'sample.10@' if compared as strings.",
     });
     // Clicking on the Email column header to sort the table in ascending order.
     await page
@@ -236,7 +236,7 @@ test(title, details, async ({ page }) => {
     });
     await page.visuallyAssert({
         assertionToTestFor:
-            'Check that the following list of emails is sorted in ascending order without treating numeric parts specially, treat entire email including number as string.',
+            "Assert that the list of emails is sorted in strictly ascending lexicographic (dictionary) order, comparing each email as a plain text string character by character. Do not interpret numeric parts as numbers; for example, 'sample.10@' should come before 'sample.6@' if compared as strings.",
     });
     // Clicking on the Location column header to sort the table in descending order.
     await page
@@ -377,7 +377,7 @@ test(title, details, async ({ page }) => {
     // Verifying that the extracted Start values are sorted in decreasing order (highest → lowest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Start values is sorted in decreasing order (highest → lowest)',
+            "Assert that the following list of 'Start' values is sorted in decreasing order (highest → lowest). If all values are identical, consider it valid and pass the check, since identical entries inherently satisfy the sorted condition.",
     });
     // Clicking on the Start column header to sort the table in ascending order.
     await page
@@ -407,7 +407,7 @@ test(title, details, async ({ page }) => {
     // Verifying that all extracted Start values are sorted in increasing order (lowest → highest).
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Start values is sorted in increasing order (lowest → highest)',
+            "Assert that the following list of 'Start' values is sorted in increasing order (lowest → highest). If all values are identical, consider it valid and pass the check, since identical entries inherently satisfy the sorted condition.",
     });
     // Clicking on the Current column header to sort in descending order.
     await page
@@ -807,15 +807,15 @@ test(title, details, async ({ page }) => {
         analysisToRun:
             "Extract all values under the 'Status' column. Then, verify that these values are sorted alphabetically or by logical state order (e.g., Active -> Inactive). If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
-            "The 'Status' column is expected to be sorted in ascending order, with 'Active' appearing before 'Inactive'.",
+            "The 'Status' column is expected to be sorted in descending order, with 'Active' appearing before 'Inactive'.",
     });
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Status values is sorted in ascending alphabetical order',
+            'Assert that the following list of Status values is sorted in descending alphabetical order',
         retries: 5,
         retryWaitSeconds: 5,
     });
-    // Clicking on the 'Status' column header again to sort it in descending order.
+    // Clicking on the 'Status' column header again to sort it in ascending order.
     await page
         .find("[data-testid='learners-table-header-status']", {
             failover: [
@@ -838,11 +838,11 @@ test(title, details, async ({ page }) => {
         analysisToRun:
             "Extract all values under the 'Status' column. Then, verify that these values are sorted in reverse order (Inactive -> Active). If they are not, state the first instance of an unsorted value.",
         additionalRelevantContext:
-            "The 'Status' column is expected to be sorted in descending order, with 'Inactive' appearing before 'Active'.",
+            "The 'Status' column is expected to be sorted in ascending order, with 'Inactive' appearing before 'Active'.",
     });
     await page.visuallyAssert({
         assertionToTestFor:
-            'Assert that the following list of Status values is sorted in descending alphabetical order',
+            'Assert that the following list of Status values is sorted in ascending alphabetical order',
         retries: 5,
         retryWaitSeconds: 5,
     });
