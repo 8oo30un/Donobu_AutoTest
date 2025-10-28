@@ -96,10 +96,10 @@ test(title, details, async ({ page }) => {
   // Clicking on the Learners tab from the top navigation bar to navigate to the Learners section.
   await page
     .find(
-      '#__next > div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > button:nth-of-type(2)',
+      '[data-testid="layout-header-learners-button"]',
       {
         failover: [
-          "[data-testid='layout-header-learners-button']",
+          "#__next > div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > button:nth-of-type(2)",
           ".//button[normalize-space(.)='Learners']",
           'div.mantine-xg7kom > button:nth-of-type(2)',
           'div.mantine-yx7xue > div:nth-of-type(1) > button:nth-of-type(2)',

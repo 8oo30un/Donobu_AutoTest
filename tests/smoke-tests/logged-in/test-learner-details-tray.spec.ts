@@ -71,10 +71,10 @@ test(title, details, async ({ page }) => {
   // Navigating to the Learner tab by clicking on the 'Learners' button.
   await page
     .find(
-      '#__next > div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > button:nth-of-type(2)',
+      "[data-testid='layout-header-learners-button']",
       {
         failover: [
-          "[data-testid='layout-header-learners-button']",
+          "#__next > div > div > div:nth-of-type(1) > div > div:nth-of-type(1) > button:nth-of-type(2)",
           ".//button[normalize-space(.)='Learners']",
           'div.mantine-xg7kom > button:nth-of-type(2)',
           'div.mantine-yx7xue > div:nth-of-type(1) > button:nth-of-type(2)',
@@ -96,6 +96,8 @@ test(title, details, async ({ page }) => {
   await page.visuallyAssert({
     assertionToTestFor:
       "Assert that the Learner table headers 'Name', 'Email', 'Location', 'Last Login (PDT)', 'Start', 'Current', 'TOS (HH:MM)', 'Self-Paced Lessons', 'Trainer-led Classes', 'AVG Rating', 'Manager', and 'Status' are visible and aligned, and that the 'Search name, email, etc...', 'Search', 'Edit Columns/Filters', and 'Last 30 days' elements are visible and not overlapping. Also assert that there are no broken icons, empty states, or undefined labels.",
+      retries: 5,
+      retryWaitSeconds: 5,
   });
   // Clicking on the TOS column header to sort the table in ascending order of TOS value.
   await page

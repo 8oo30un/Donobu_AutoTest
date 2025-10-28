@@ -48,6 +48,14 @@ test(title, details, async ({ page }) => {
     // Waiting until the text 'Immerse Demo Account' becomes visible on the page.
     await expect(page.getByText('Immerse Demo Account')).toBeVisible();
 
+    // Wait for all components loaded in UI with proper value, also wait until graph is rendered.
+    await page.visuallyAssert({
+        assertionToTestFor:
+            'Assert that all components loaded in UI with proper value, also wait until graph is rendered',
+        retries: 5,
+        retryWaitSeconds: 5,
+    });
+
     // Extract initial card values and store in variables
     const initialNumLearners = await page
         .locator('[data-testid="dashboard-summary-total-learners-card"] div:nth-of-type(3)')
