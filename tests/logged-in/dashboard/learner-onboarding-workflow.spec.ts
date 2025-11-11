@@ -70,6 +70,7 @@ test(title, details, async ({ page }) => {
     .click();
   // Wait for learner page to load successfully
   await page.waitForLoadState('networkidle');
+  await page.getByRole("heading", { name: "Learners" }).waitFor({ state: "visible" });
   // Clicking on the 'All Contracts' dropdown to view available contracts and select one with an available license.
   await page
     .find(".//button[normalize-space(.)='All Contracts']", {
@@ -135,18 +136,10 @@ test(title, details, async ({ page }) => {
     })
     .click();
   // Verify that the Add Learner modal displays all required fields
-  await page.find("[data-testid='learners-form-first-name-input']", {
-    failover: ["[name='firstName']", "[placeholder='Please enter a first name']"],
-  });
-  await page.find("[data-testid='learners-form-last-name-input']", {
-    failover: ["[name='lastName']", "[placeholder='Please enter a last name']"],
-  });
-  await page.find("[data-testid='learners-form-email-input']", {
-    failover: ["[name='email']", "[placeholder='Please enter a valid email']"],
-  });
-  await page.find("[data-testid='learners-form-country-select']", {
-    failover: ["[placeholder='Please enter a country']"],
-  });
+  await expect(page.locator("[data-testid='learners-form-first-name-input']")).toBeVisible();
+  await expect(page.locator("[data-testid='learners-form-last-name-input']")).toBeVisible();
+  await expect(page.locator("[data-testid='learners-form-email-input']")).toBeVisible();
+  await expect(page.locator("[data-testid='learners-form-country-select']")).toBeVisible();
   // Entering "Test" into the First Name field as specified in the overall objective.
   await page
     .find("[data-testid='learners-form-first-name-input']", {
@@ -247,16 +240,8 @@ test(title, details, async ({ page }) => {
     })
     .click();
   // Verify that the learner was added successfully by checking for success message or toast
-  await page.find("//*[contains(text(), 'success') or contains(text(), 'Success') or contains(text(), 'added')]", {
-    failover: [
-      "[role='status']",
-      "[role='alert']",
-      ".mantine-Notification-root",
-      "div[class*='notification']",
-      "div[class*='toast']",
-      "div[class*='success']",
-    ],
-  });
+  await page.locator("//*[contains(text(), 'Learner Added') and contains(@class, 'mantine-Notification-title')]").waitFor({ state: 'visible', timeout: 5000 });
+  await page.locator("//*[contains(text(), 'Learner Activated') and contains(@class, 'mantine-Notification-title')]").waitFor({ state: 'visible', timeout: 5000 });
   // Waiting for the page to finish loading after saving changes to the new learner.
   await page.waitForTimeout(5000);
   await page.run('acknowledgeUserInstruction', {
@@ -294,12 +279,7 @@ test(title, details, async ({ page }) => {
   // Waiting for the search results to load after searching for the learner's email.
   await page.waitForTimeout(5000);
   // Verify that the search results contain the learner's email
-  await page.find(`//*[contains(text(), '${generatedEmail}')]`, {
-    failover: [
-      `[data-testid='learners-table'] //*[contains(text(), '${generatedEmail}')]`,
-      "table tbody tr td",
-    ],
-  });
+  await expect(page.locator(`//*[contains(text(), '${generatedEmail}')]`)).toBeVisible();
   // Clicking on the "..." button to reveal options for the learner, including "View Registration Link".
   await page
     .find(".//button[normalize-space(.)='...']", {
@@ -505,5 +485,6 @@ test(title, details, async ({ page }) => {
     ],
   });
   const activeText = await page.locator("td:has-text('Active')").first().textContent();
+  expect(activeText).toBe('Active');
   console.log('Learner status:', activeText?.trim());
 });
