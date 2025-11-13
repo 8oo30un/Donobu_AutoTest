@@ -21,19 +21,22 @@ const details = {
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto('https://app.immerse.online/login');
-  // Clicking the language dropdown to change the display language.
+  await page.goto('https://staging-dashboard.immerse.online/login');
+  // Clicking on the language selector to open the language options.
   await page
-    .find('#mantine-R4qaqm-target', {
-      failover: ["(.//div[normalize-space(.)='En'])[2]", 'div.css-1j0a71q'],
+    .find('#mantine-r0-target', {
+      failover: [
+        "[aria-label='Display Language']",
+        "(.//div[normalize-space(.)='ENGLISH'])[1]",
+      ],
     })
     .click();
-  // Changing the language to Japanese by clicking on the '日本語' option in the language selection menu.
+  // Selecting Japanese from the language options to change the display language.
   await page
-    .find('#mantine-R4qaqm-dropdown > div > button:nth-of-type(4)', {
+    .find('#mantine-r0-dropdown > div > button:nth-of-type(2)', {
       failover: [
         ".//button[normalize-space(.)='日本語']",
-        'html > body > div:nth-of-type(3) > div > div > div > button:nth-of-type(4)',
+        'div.css-1a47ai3 > div:nth-of-type(3) > div > button:nth-of-type(2)',
       ],
     })
     .click();
