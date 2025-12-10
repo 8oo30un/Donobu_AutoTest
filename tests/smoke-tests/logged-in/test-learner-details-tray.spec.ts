@@ -95,7 +95,7 @@ test(title, details, async ({ page }) => {
   await page.locator('[data-testid="learners-table-no-results"]').waitFor({ state: 'hidden', timeout: 30000 });
   await page.visuallyAssert({
     assertionToTestFor:
-      "Assert that the Learner table headers 'Name', 'Email', 'Location', 'Last Login (PDT)', 'Start', 'Current', 'TOS (HH:MM)', 'Self-Paced Lessons', 'Trainer-led Classes', 'AVG Rating', 'Manager', and 'Status' are visible and aligned, and that the 'Search name, email, etc...', 'Search', 'Edit Columns/Filters', and 'Last 30 days' elements are visible and not overlapping. Also assert that there are no broken icons, empty states, or undefined labels.",
+      "Assert that the Learner table headers 'Name', 'Email', 'Location', 'Last Login (PST or PDT)', 'Start', 'Current', 'TOS (HH:MM)', 'Self-Paced Lessons', 'Trainer-led Classes', 'AVG Rating', 'Manager', and 'Status' are visible and aligned, and that the 'Search name, email, etc...', 'Search', 'Edit Columns/Filters', and 'Last 30 days' elements are visible and not overlapping. Also assert that there are no broken icons, empty states, or undefined labels.",
       retries: 5,
       retryWaitSeconds: 5,
   });
