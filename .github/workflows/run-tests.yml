@@ -45,6 +45,7 @@ jobs:
         id: run_tests
         continue-on-error: true
         env:
+          CI: true
           GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GEMINI_API_KEY }}
           GOOGLE_GENERATIVE_AI_MODEL_NAME: gemini-2.5-flash
           EMAIL: ${{ vars.EMAIL }}

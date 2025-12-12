@@ -2,7 +2,8 @@ import { defineConfig, devices } from "donobu";
 
 export default defineConfig({
   testDir: "./tests",
-  workers: 4,
+  // CI 환경에서는 workers를 1로 줄여서 API 할당량 초과 방지
+  workers: process.env.CI ? 1 : 4,
   retries: 1,
   projects: [
     {
