@@ -20,6 +20,27 @@ jobs:
       - name: Install Donobu dependencies
         run: npm install && npx playwright install --with-deps
 
+      - name: Verify environment variables
+        run: |
+          if [ -z "${{ secrets.GOOGLE_GEMINI_API_KEY }}" ]; then
+            echo "❌ ERROR: GOOGLE_GEMINI_API_KEY secret is not set!"
+            exit 1
+          else
+            echo "✅ GOOGLE_GEMINI_API_KEY is set"
+          fi
+          if [ -z "${{ vars.EMAIL }}" ]; then
+            echo "❌ ERROR: EMAIL variable is not set!"
+            exit 1
+          else
+            echo "✅ EMAIL is set"
+          fi
+          if [ -z "${{ secrets.PASSWORD }}" ]; then
+            echo "❌ ERROR: PASSWORD secret is not set!"
+            exit 1
+          else
+            echo "✅ PASSWORD is set"
+          fi
+
       - name: Run Smoke Tests
         id: run_tests
         continue-on-error: true
