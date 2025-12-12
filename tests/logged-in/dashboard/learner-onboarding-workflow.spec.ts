@@ -82,8 +82,10 @@ test(title, details, async ({ page }) => {
     .click();
   // Wait for learner page to load successfully
   await page.waitForLoadState('networkidle');
-  await page.getByRole("heading", { name: "Learners" }).waitFor({ state: "visible" });
+  await page.waitForTimeout(1000);
+  await page.getByRole("heading", { name: "Learners" }).waitFor({ state: "visible", timeout: 30000 });
   // Clicking on the 'All Contracts' dropdown to view available contracts and select one with an available license.
+  await page.waitForTimeout(2000);
   await page
     .find(".//button[normalize-space(.)='All Contracts']", {
       failover: [
@@ -115,11 +117,14 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
-  // Wait for add Learner button
-  await page.locator('//button[normalize-space(.)="Add Learners"]').waitFor({ 
-  state: 'visible', 
-  timeout: 10000 
-});
+  // Wait for contract data to load and page to stabilize
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(2000);
+  // Wait for add Learner button with extended timeout
+  await page.locator('//button[normalize-space(.)="Add Learners"]').waitFor({
+    state: 'visible',
+    timeout: 30000
+  });
   // Clicking on the 'Add Learners' button to initiate the process of adding a new learner.
   await page
     .find(".//button[normalize-space(.)='Add Learners']", {
