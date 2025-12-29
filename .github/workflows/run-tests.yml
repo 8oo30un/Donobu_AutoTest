@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install System dependencies
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb jq
 
       - name: Install Donobu dependencies
         run: npm install && npx playwright install --with-deps
@@ -59,8 +59,16 @@ jobs:
           echo "Retries: 0 (to avoid additional API calls on failure)"
           echo "SELF_HEAL_TESTS_ENABLED: false (to minimize API calls)"
           echo "Timeout: 180 minutes"
-          xvfb-run npx playwright test || true
+          echo ""
+          echo "📋 Running tests with detailed output..."
+          xvfb-run npx playwright test --reporter=list || true
+          echo ""
           echo "✅ Test execution completed"
+          echo ""
+          echo "📊 Summary:"
+          echo "- Check the test results above for failed/skipped tests"
+          echo "- Failed tests will show error details"
+          echo "- Skipped tests may be due to dependencies or testIgnore configuration"
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4
@@ -84,6 +92,15 @@ jobs:
           if [ -f "test-results/playwright-report.json" ]; then
             echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
             npm exec playwright-json-to-markdown < "test-results/playwright-report.json" >> $GITHUB_STEP_SUMMARY || echo "Failed to generate markdown report"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 🔍 Failed and Skipped Tests Details" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            # Extract failed and skipped tests
+            echo "**Failed Tests:**" >> $GITHUB_STEP_SUMMARY
+            jq -r '.suites[]?.specs[]? | select(.tests[0].results[0].status == "failed") | "- \(.title) (Error: \(.tests[0].results[0].error?.message // "Unknown error"))"' test-results/playwright-report.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "- No failed tests found or error parsing" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Skipped Tests:**" >> $GITHUB_STEP_SUMMARY
+            jq -r '.suites[]?.specs[]? | select(.tests[0].results[0].status == "skipped") | "- \(.title)"' test-results/playwright-report.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "- No skipped tests found or error parsing" >> $GITHUB_STEP_SUMMARY
           else
             echo "⚠️ Test results file not found" >> $GITHUB_STEP_SUMMARY
           fi
