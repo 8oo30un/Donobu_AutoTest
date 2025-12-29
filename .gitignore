@@ -9,3 +9,7 @@ test-results
 playwright-report
 # Persisted auth state for authenticated tests.
 login-state.json
+b2b-login-state.json
+d2c-login-state.json
+# Environment variables (API keys)
+.env
