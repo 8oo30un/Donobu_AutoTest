@@ -9,7 +9,7 @@ on:
 jobs:
   run-donobu-flows:
     runs-on: ubuntu-latest
-    timeout-minutes: 120  # Job 타임아웃 설정 (2시간)
+    timeout-minutes: 180  # Job 타임아웃 설정 (3시간) - workers 1로 인해 실행 시간 증가
 
     steps:
       - name: Checkout repository
@@ -54,8 +54,9 @@ jobs:
           SELF_HEAL_TESTS_ENABLED: true
         run: |
           echo "🚀 Starting Playwright tests..."
-          echo "Workers: 1 (CI mode)"
-          echo "Retries: 2"
+          echo "Workers: 1 (CI mode - to prevent API quota exceeded)"
+          echo "Retries: 0 (to avoid additional API calls on failure)"
+          echo "Timeout: 180 minutes"
           xvfb-run npx playwright test || true
           echo "✅ Test execution completed"
 
