@@ -51,11 +51,13 @@ jobs:
           GOOGLE_GENERATIVE_AI_MODEL_NAME: gemini-2.5-flash
           EMAIL: ${{ vars.EMAIL }}
           PASSWORD: ${{ secrets.PASSWORD }}
-          SELF_HEAL_TESTS_ENABLED: true
+          # CI 환경에서는 self-healing 비활성화하여 API 호출 최소화
+          SELF_HEAL_TESTS_ENABLED: false
         run: |
           echo "🚀 Starting Smoke Tests..."
           echo "Workers: 1 (CI mode - to prevent API quota exceeded)"
           echo "Retries: 0 (to avoid additional API calls on failure)"
+          echo "SELF_HEAL_TESTS_ENABLED: false (to minimize API calls)"
           echo "Timeout: 180 minutes"
           xvfb-run npx playwright test tests/smoke-tests || true
           echo "✅ Test execution completed"
