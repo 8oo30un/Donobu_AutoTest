@@ -1,0 +1,141 @@
+{
+  "cookies": [
+    {
+      "name": "__Host-next-auth.csrf-token",
+      "value": "fad2d05bfee4620591cd6d51f29629d1e1d2e8003f3408052125b17565280f3f%7C11e0415bacff2f2133883391c3a694f0dfb3609980de07d444ec1884b1168565",
+      "domain": "staging-dashboard.immerse.online",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__Secure-next-auth.callback-url",
+      "value": "https%3A%2F%2Fapp.immerse.online",
+      "domain": "staging-dashboard.immerse.online",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ajs_anonymous_id",
+      "value": "f3cba6bd-2135-4962-9962-94d3239df626",
+      "domain": ".immerse.online",
+      "path": "/",
+      "expires": 1795716992,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "guest_id_marketing",
+      "value": "v1%3A176418097431294756",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1798740974.271289,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "guest_id_ads",
+      "value": "v1%3A176418097431294756",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1798740974.271314,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "personalization_id",
+      "value": "\"v1_Z0brsvNU7+C36vLvfYk60w==\"",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1798740974.271329,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "guest_id",
+      "value": "v1%3A176418097431294756",
+      "domain": ".twitter.com",
+      "path": "/",
+      "expires": 1798740974.271445,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "muc_ads",
+      "value": "345e8c62-2b1e-4bc0-a19d-8ad17fa5982f",
+      "domain": ".t.co",
+      "path": "/",
+      "expires": 1798740974.272662,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "NEXT_LOCALE",
+      "value": "ENG",
+      "domain": "staging-dashboard.immerse.online",
+      "path": "/",
+      "expires": 1795716979.146172,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "mp_9756d08102e32373222a26b5a59ce73f_mixpanel",
+      "value": "%7B%22distinct_id%22%3A223525%2C%22%24device_id%22%3A%22e2b67fbb-5ac9-4bf6-afc1-936079994d61%22%2C%22%24initial_referrer%22%3A%22%24direct%22%2C%22%24initial_referring_domain%22%3A%22%24direct%22%2C%22__mps%22%3A%7B%7D%2C%22__mpso%22%3A%7B%7D%2C%22__mpus%22%3A%7B%7D%2C%22__mpa%22%3A%7B%7D%2C%22__mpu%22%3A%7B%7D%2C%22__mpr%22%3A%5B%5D%2C%22__mpap%22%3A%5B%5D%2C%22%24user_id%22%3A223525%7D",
+      "domain": ".immerse.online",
+      "path": "/",
+      "expires": 1795716991,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__Secure-next-auth.session-token",
+      "value": "eyJhbGciOiJkaXIiLCJlbmMiOiJBMjU2R0NNIn0..ZnlhODWuX9Erfmgb.Q1sBMa1c4EicEWVnrErmlQGfnK90DsjRq-h9WJThDI2Dqqhm1H4jUrw3QpwqVue8RmztHORWLrRBm7o4rxwo45tTeE1gPNGYsR0Dtbb3xAbywWproBOCv1UpcNLfa_G6kR1jZxerttKvVDK04x9pgZ9MUvvshgx0ccvmHq9Sds-l0e6V3KRRkRHV1lcJ0evcTvfzeNmtzNO9uTqyxYF18bXuxDHeB7L9zBX4syIM9o19UtSoy3xqwsMBQQiGR8LCjTh7_gH9cig6TvlKeNiojyojcvfYOdfjvgpt1M2dyXPiVloHbqKJhPO7HFpo_DHEibz476sf98rgJmxDHAegUp9p0dmjep3-yJQ0lCaFwybYTuaoQLcA1iuVOUhBPCAzOP0F0JnG-gtoPP29wtp44RFnygvEi2vCIH7c9g7IUZ66mbnAX7CFS-gWp2msLeEivWMSLwOP_sCqfZEPELTJp2sHrafWl8w5VfyFEkGMQ-sTVf8x4mM0RbfAVLx9eoFfU3Iq77JXpgsckpXaNRKFxNdSsbjOUePyRjfhvvMVHZA_0yGV5PUi3ROm5PkUpUnZA_qC2_AOuZ042hMZA_kwmCW0hIcqN5x2OfWfBNlpVz8Fya7ICOx20R3_7E0szeyp_EHSL7zc89WNfUNgPHb-2Ho3zaiNY6us4QcVMP1yFOXuZG_397Z4q38EimiWMflfQC3OnyhBfxARL-FcQQwMr2ZlV5LBMwZXjlSDwryw5_u0FifryYEK5WlOVy1YXfytH3mEgtfC6A-cKd2QjRneKbe1tAMApmb9GRtO4Fr91Tu4XIN0-tIR0_gM8D0rU783apGbMWkwiG-BE0xJX1m3zZ6Z5ah8_0cKmlDJAnd_tcKjPhGuFNAWnFgel349Ue2oyhFgNuhL3rST4WPkRauOR98JiEuI2xMsyDT1WM5bkz8O7nDB3a9cjIn0zsdTkEpGmF9QgdXb1yOxBoWdsU6cypLgb7m4LEO6e-4aitjpzl8qeA1q.yZrMxmYn5m7JFMP-N5Qo_g",
+      "domain": "staging-dashboard.immerse.online",
+      "path": "/",
+      "expires": 1766772994.205531,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://staging-dashboard.immerse.online",
+      "localStorage": [
+        {
+          "name": "nextauth.message",
+          "value": "{\"event\":\"session\",\"data\":{\"trigger\":\"getSession\"},\"timestamp\":1764180994}"
+        },
+        {
+          "name": "__mpq_9756d08102e32373222a26b5a59ce73f_ev",
+          "value": "[{\"id\":\"51rjbns56px9rgsd\",\"flushAfter\":1764181001702,\"payload\":{\"event\":\"$identify\",\"properties\":{\"$os\":\"Mac OS X\",\"$browser\":\"Chrome\",\"$referrer\":\"https://staging-dashboard.immerse.online/forgot-password\",\"$referring_domain\":\"staging-dashboard.immerse.online\",\"$current_url\":\"https://staging-dashboard.immerse.online/login\",\"$browser_version\":138,\"$screen_height\":720,\"$screen_width\":1280,\"mp_lib\":\"web\",\"$lib_version\":\"2.72.0\",\"$insert_id\":\"npgt0w7bmoesepst\",\"time\":1764180991.702,\"mp_loader\":\"gtm\",\"distinct_id\":223525,\"$device_id\":\"e2b67fbb-5ac9-4bf6-afc1-936079994d61\",\"$initial_referrer\":\"$direct\",\"$initial_referring_domain\":\"$direct\",\"$user_id\":223525,\"$anon_distinct_id\":\"$device:e2b67fbb-5ac9-4bf6-afc1-936079994d61\",\"token\":\"9756d08102e32373222a26b5a59ce73f\"}}}]"
+        },
+        {
+          "name": "ajs_anonymous_id",
+          "value": "\"f3cba6bd-2135-4962-9962-94d3239df626\""
+        },
+        {
+          "name": "__mpq_9756d08102e32373222a26b5a59ce73f_pp",
+          "value": "[]"
+        },
+        {
+          "name": "ajs_user_id",
+          "value": "null"
+        }
+      ]
+    }
+  ]
+}

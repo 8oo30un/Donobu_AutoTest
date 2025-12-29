@@ -4,7 +4,8 @@ export default defineConfig({
   testDir: "./tests",
   // CI 환경에서는 workers를 1로 줄여서 API 할당량 초과 방지
   workers: process.env.CI ? 1 : 4,
-  retries: 1,
+  // CI 환경에서 재시도 횟수 증가 (할당량 초과 등 일시적 오류 대응)
+  retries: process.env.CI ? 2 : 1,
   projects: [
     {
       name: "dashboard-login-rw",

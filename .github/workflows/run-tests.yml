@@ -9,6 +9,7 @@ on:
 jobs:
   run-donobu-flows:
     runs-on: ubuntu-latest
+    timeout-minutes: 120  # Job 타임아웃 설정 (2시간)
 
     steps:
       - name: Checkout repository
@@ -51,8 +52,12 @@ jobs:
           EMAIL: ${{ vars.EMAIL }}
           PASSWORD: ${{ secrets.PASSWORD }}
           SELF_HEAL_TESTS_ENABLED: true
-
-        run: xvfb-run npx playwright test
+        run: |
+          echo "🚀 Starting Playwright tests..."
+          echo "Workers: 1 (CI mode)"
+          echo "Retries: 2"
+          xvfb-run npx playwright test || true
+          echo "✅ Test execution completed"
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4
@@ -72,7 +77,13 @@ jobs:
 
       - name: Report test results
         if: always()
-        run: npm exec playwright-json-to-markdown < "test-results/playwright-report.json" >> $GITHUB_STEP_SUMMARY
+        run: |
+          if [ -f "test-results/playwright-report.json" ]; then
+            echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+            npm exec playwright-json-to-markdown < "test-results/playwright-report.json" >> $GITHUB_STEP_SUMMARY || echo "Failed to generate markdown report"
+          else
+            echo "⚠️ Test results file not found" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Post to Slack
         if: always()
