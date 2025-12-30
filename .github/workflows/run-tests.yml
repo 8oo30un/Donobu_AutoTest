@@ -91,16 +91,45 @@ jobs:
         run: |
           if [ -f "test-results/playwright-report.json" ]; then
             echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
-            npm exec playwright-json-to-markdown < "test-results/playwright-report.json" >> $GITHUB_STEP_SUMMARY || echo "Failed to generate markdown report"
+            # Try to generate markdown report, but don't fail if it doesn't work
+            MARKDOWN_OUTPUT=$(npm exec playwright-json-to-markdown < "test-results/playwright-report.json" 2>&1)
+            if [ $? -eq 0 ] && [ -n "$MARKDOWN_OUTPUT" ]; then
+              echo "$MARKDOWN_OUTPUT" >> $GITHUB_STEP_SUMMARY
+            else
+              # Fallback: Generate basic summary from JSON
+              echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              TOTAL=$(jq '.stats.total' test-results/playwright-report.json 2>/dev/null || echo "0")
+              PASSED=$(jq '.stats.expected' test-results/playwright-report.json 2>/dev/null || echo "0")
+              FAILED=$(jq '.stats.unexpected' test-results/playwright-report.json 2>/dev/null || echo "0")
+              SKIPPED=$(jq '.stats.skipped' test-results/playwright-report.json 2>/dev/null || echo "0")
+              echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
+              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
+              echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
+              echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
+              echo "| 📊 Total | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### 🔍 Failed and Skipped Tests Details" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             # Extract failed and skipped tests
-            echo "**Failed Tests:**" >> $GITHUB_STEP_SUMMARY
-            jq -r '.suites[]?.specs[]? | select(.tests[0].results[0].status == "failed") | "- \(.title) (Error: \(.tests[0].results[0].error?.message // "Unknown error"))"' test-results/playwright-report.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "- No failed tests found or error parsing" >> $GITHUB_STEP_SUMMARY
+            FAILED_TESTS=$(jq -r '.suites[]?.specs[]? | select(.tests[0].results[0].status == "failed") | "- \(.title) (Error: \(.tests[0].results[0].error?.message // "Unknown error"))"' test-results/playwright-report.json 2>/dev/null)
+            if [ -n "$FAILED_TESTS" ]; then
+              echo "**Failed Tests:**" >> $GITHUB_STEP_SUMMARY
+              echo "$FAILED_TESTS" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Failed Tests:** None ✅" >> $GITHUB_STEP_SUMMARY
+            fi
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Skipped Tests:**" >> $GITHUB_STEP_SUMMARY
-            jq -r '.suites[]?.specs[]? | select(.tests[0].results[0].status == "skipped") | "- \(.title)"' test-results/playwright-report.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "- No skipped tests found or error parsing" >> $GITHUB_STEP_SUMMARY
+            SKIPPED_TESTS=$(jq -r '.suites[]?.specs[]? | select(.tests[0].results[0].status == "skipped") | "- \(.title)"' test-results/playwright-report.json 2>/dev/null)
+            if [ -n "$SKIPPED_TESTS" ]; then
+              echo "**Skipped Tests:**" >> $GITHUB_STEP_SUMMARY
+              echo "$SKIPPED_TESTS" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "**Skipped Tests:** None" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "⚠️ Test results file not found" >> $GITHUB_STEP_SUMMARY
           fi
