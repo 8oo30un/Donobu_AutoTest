@@ -140,7 +140,5 @@ jobs:
           branch: fix-smoke-tests-for-${{ github.ref_name }}
           base: ${{ github.ref_name }}
           delete-branch: true
-          # Only create PR if there are actual changes
-          create-empty-commit: false
           # Don't fail if branch already exists
           branch-suffix: timestamp

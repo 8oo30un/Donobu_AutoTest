@@ -127,6 +127,13 @@ jobs:
             echo ""
             echo "Checking if test-results directory is writable:"
             touch test-results/test-write.txt 2>&1 && rm test-results/test-write.txt && echo "✅ Directory is writable" || echo "❌ Directory is NOT writable"
+            echo ""
+            echo "Attempting to generate JSON report manually..."
+            # Try to generate report using Playwright's merge command if available
+            if [ -f "test-results/.last-run.json" ]; then
+              echo "Found .last-run.json, attempting to use it..."
+              cp test-results/.last-run.json test-results/playwright-report.json 2>/dev/null && echo "✅ Copied .last-run.json to playwright-report.json" || echo "❌ Could not copy file"
+            fi
           fi
           echo ""
           
@@ -213,11 +220,32 @@ jobs:
       - name: Report test results
         if: always()
         run: |
-          echo "## 🔍 Test Results Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # First, try to generate summary from execution log if JSON is not available
+          if [ ! -f "test-results/playwright-report.json" ] && [ -f "test-execution.log" ]; then
+            echo "### Test Results from Execution Log" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| File | Passed | Self-Healed | Failed | Timed Out | Skipped | Interrupted | Duration |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|--------|-------------|--------|-----------|---------|-------------|----------|" >> $GITHUB_STEP_SUMMARY
+            
+            # Parse test results from log (basic parsing)
+            PASSED_COUNT=$(grep -c "passed" test-execution.log 2>/dev/null || echo "0")
+            FAILED_COUNT=$(grep -c "failed" test-execution.log 2>/dev/null || echo "0")
+            SKIPPED_COUNT=$(grep -c "skipped" test-execution.log 2>/dev/null || echo "0")
+            
+            echo "| **TOTAL** | **$PASSED_COUNT ✅** | **0 ❤️‍🩹** | **$FAILED_COUNT ❌** | **0 ⏰** | **$SKIPPED_COUNT ⏭️** | **0 ⚡** | - |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "*Note: Detailed results require playwright-report.json file*" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "### 🔍 Test Results Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           echo "🔍 Checking for test result files..."
-          echo "### 📁 File System Check" >> $GITHUB_STEP_SUMMARY
+          echo "#### 📁 File System Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ -d "test-results" ]; then
@@ -249,25 +277,42 @@ jobs:
           fi
           
           if [ -f "test-results/playwright-report.json" ]; then
-            echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
             # Try to generate markdown report, but don't fail if it doesn't work
             MARKDOWN_OUTPUT=$(npm exec playwright-json-to-markdown < "test-results/playwright-report.json" 2>&1)
             if [ $? -eq 0 ] && [ -n "$MARKDOWN_OUTPUT" ]; then
               echo "$MARKDOWN_OUTPUT" >> $GITHUB_STEP_SUMMARY
             else
-              # Fallback: Generate basic summary from JSON
-              echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+              # Fallback: Generate detailed summary from JSON
+              echo "### 📈 Test Results Table" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
+              
+              # Generate table from JSON
+              echo "| File | Passed | Self-Healed | Failed | Timed Out | Skipped | Interrupted | Duration |" >> $GITHUB_STEP_SUMMARY
+              echo "|------|--------|-------------|--------|-----------|---------|-------------|----------|" >> $GITHUB_STEP_SUMMARY
+              
+              # Extract test results per file
+              jq -r '.suites[]? | 
+                "| \(.file // "Unknown") | " + 
+                (if .specs[]?.tests[0].results[0].status == "passed" then "1 ✅" else "0" end) + " | " +
+                "0 ❤️‍🩹 | " +
+                (if .specs[]?.tests[0].results[0].status == "failed" then "1 ❌" else "0" end) + " | " +
+                "0 ⏰ | " +
+                (if .specs[]?.tests[0].results[0].status == "skipped" then "1 ⏭️" else "0" end) + " | " +
+                "0 ⚡ | " +
+                "\(.specs[0].tests[0].results[0].duration // 0)ms |"' \
+                test-results/playwright-report.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || echo "| Error parsing JSON | - | - | - | - | - | - | - |" >> $GITHUB_STEP_SUMMARY
+              
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              # Add totals
               TOTAL=$(jq '.stats.total' test-results/playwright-report.json 2>/dev/null || echo "0")
               PASSED=$(jq '.stats.expected' test-results/playwright-report.json 2>/dev/null || echo "0")
               FAILED=$(jq '.stats.unexpected' test-results/playwright-report.json 2>/dev/null || echo "0")
               SKIPPED=$(jq '.stats.skipped' test-results/playwright-report.json 2>/dev/null || echo "0")
-              echo "| Status | Count |" >> $GITHUB_STEP_SUMMARY
-              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-              echo "| ✅ Passed | $PASSED |" >> $GITHUB_STEP_SUMMARY
-              echo "| ❌ Failed | $FAILED |" >> $GITHUB_STEP_SUMMARY
-              echo "| ⏭️ Skipped | $SKIPPED |" >> $GITHUB_STEP_SUMMARY
-              echo "| 📊 Total | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+              DURATION=$(jq '.stats.duration' test-results/playwright-report.json 2>/dev/null || echo "0")
+              DURATION_SEC=$(echo "scale=1; $DURATION / 1000" | bc 2>/dev/null || echo "0")
+              
+              echo "| **TOTAL** | **$PASSED ✅** | **0 ❤️‍🩹** | **$FAILED ❌** | **0 ⏰** | **$SKIPPED ⏭️** | **0 ⚡** | **${DURATION_SEC}s** |" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
             fi
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -299,7 +344,32 @@ jobs:
               echo "**⏭️ Skipped Tests:** None" >> $GITHUB_STEP_SUMMARY
             fi
           else
-            echo "⚠️ Test results file not found" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Test results file (playwright-report.json) not found" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Test Results from Execution Log" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Try to parse test results from execution log
+            if [ -f "test-execution.log" ]; then
+              # Extract test summary from log
+              echo "Parsing test results from execution log..." >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              
+              # Look for test summary pattern in log
+              LOG_SUMMARY=$(grep -A 20 "passed\|failed\|skipped" test-execution.log | tail -30 || echo "")
+              if [ -n "$LOG_SUMMARY" ]; then
+                echo "Test execution summary:" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                echo "$LOG_SUMMARY" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+              else
+                echo "Could not extract test summary from log" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**Note:** JSON report file is required for detailed test analysis." >> $GITHUB_STEP_SUMMARY
+            echo "Check the 'Run Playwright tests' step logs for full test output." >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Post to Slack
@@ -340,7 +410,5 @@ jobs:
           branch: fix-playwright-tests-for-${{ github.ref_name }}
           base: ${{ github.ref_name }}
           delete-branch: true
-          # Only create PR if there are actual changes
-          create-empty-commit: false
           # Don't fail if branch already exists
           branch-suffix: timestamp
