@@ -69,6 +69,7 @@ jobs:
           
           # Run tests and capture exit code
           echo "Running: xvfb-run npx playwright test --reporter=list"
+          echo "Note: JSON and HTML reporters are configured in playwright.config.ts"
           echo "=========================================="
           echo "TEST EXECUTION START"
           echo "=========================================="
@@ -76,9 +77,10 @@ jobs:
           echo "Playwright config: $(ls -la playwright.config.ts 2>/dev/null || echo 'NOT FOUND')"
           echo ""
           
-          # Run tests with explicit output directory
+          # Run tests (reporter is already configured in playwright.config.ts)
+          # Don't override reporter settings to avoid conflicts
           set +e  # Don't exit on error
-          xvfb-run npx playwright test --reporter=list --reporter=json --output=test-results/ 2>&1 | tee test-execution.log
+          xvfb-run npx playwright test --reporter=list 2>&1 | tee test-execution.log
           TEST_EXIT_CODE=$?
           set -e  # Re-enable exit on error
           
@@ -92,6 +94,9 @@ jobs:
           echo "=========================================="
           echo ""
           
+          # Wait a moment for reporters to finish writing files
+          sleep 2
+          
           # Check what was actually created
           echo "📁 Checking what files were created..."
           echo "All files in current directory:"
@@ -102,6 +107,27 @@ jobs:
           echo ""
           echo "All JSON files:"
           find . -name "*.json" -type f 2>/dev/null | head -20 || echo "No JSON files found"
+          echo ""
+          
+          # Verify report file was created
+          if [ -f "test-results/playwright-report.json" ]; then
+            echo "✅ SUCCESS: test-results/playwright-report.json was created"
+            echo "File size: $(du -h test-results/playwright-report.json | cut -f1)"
+            echo "First few lines of JSON:"
+            head -5 test-results/playwright-report.json || echo "Could not read file"
+          else
+            echo "❌ ERROR: test-results/playwright-report.json was NOT created!"
+            echo "This might indicate:"
+            echo "  1. Tests did not run at all"
+            echo "  2. Reporter configuration issue"
+            echo "  3. File permission issue"
+            echo ""
+            echo "Checking Playwright version:"
+            npx playwright --version || echo "Could not get version"
+            echo ""
+            echo "Checking if test-results directory is writable:"
+            touch test-results/test-write.txt 2>&1 && rm test-results/test-write.txt && echo "✅ Directory is writable" || echo "❌ Directory is NOT writable"
+          fi
           echo ""
           
           echo "📝 Test execution completed with exit code: $TEST_EXIT_CODE"
@@ -278,13 +304,18 @@ jobs:
 
       - name: Post to Slack
         if: always()
+        continue-on-error: true
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           if [ -n "$SLACK_WEBHOOK_URL" ]; then
-            WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            SLACK_PAYLOAD=$(npm exec playwright-json-to-slack-json -- --report-url "$WORKFLOW_URL" < "test-results/playwright-report.json")
-            curl --header 'Content-type: application/json' --data "$SLACK_PAYLOAD" "$SLACK_WEBHOOK_URL"
+            if [ -f "test-results/playwright-report.json" ]; then
+              WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+              SLACK_PAYLOAD=$(npm exec playwright-json-to-slack-json -- --report-url "$WORKFLOW_URL" < "test-results/playwright-report.json")
+              curl --header 'Content-type: application/json' --data "$SLACK_PAYLOAD" "$SLACK_WEBHOOK_URL"
+            else
+              echo "⚠️ test-results/playwright-report.json not found, skipping Slack notification."
+            fi
           else
             echo "SLACK_WEBHOOK_URL secret not present, skipping Slack notification."
           fi
