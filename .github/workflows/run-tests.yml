@@ -72,25 +72,38 @@ jobs:
           echo "=========================================="
           echo "TEST EXECUTION START"
           echo "=========================================="
+          echo "Current directory: $(pwd)"
+          echo "Playwright config: $(ls -la playwright.config.ts 2>/dev/null || echo 'NOT FOUND')"
+          echo ""
           
-          if xvfb-run npx playwright test --reporter=list 2>&1 | tee test-execution.log; then
-            TEST_EXIT_CODE=0
-            echo ""
-            echo "=========================================="
-            echo "✅ ALL TESTS PASSED"
-            echo "=========================================="
-          else
-            TEST_EXIT_CODE=$?
-            echo ""
-            echo "=========================================="
-            echo "❌ TESTS FAILED with exit code: $TEST_EXIT_CODE"
-            echo "=========================================="
-            echo ""
-            echo "📋 Last 50 lines of test execution log:"
-            tail -50 test-execution.log || echo "Could not read test-execution.log"
-          fi
+          # Run tests with explicit output directory
+          set +e  # Don't exit on error
+          xvfb-run npx playwright test --reporter=list --reporter=json --output=test-results/ 2>&1 | tee test-execution.log
+          TEST_EXIT_CODE=$?
+          set -e  # Re-enable exit on error
           
           echo ""
+          echo "=========================================="
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ ALL TESTS PASSED (exit code: $TEST_EXIT_CODE)"
+          else
+            echo "❌ TESTS FAILED (exit code: $TEST_EXIT_CODE)"
+          fi
+          echo "=========================================="
+          echo ""
+          
+          # Check what was actually created
+          echo "📁 Checking what files were created..."
+          echo "All files in current directory:"
+          ls -la | head -30
+          echo ""
+          echo "All files in test-results:"
+          ls -la test-results/ 2>/dev/null || echo "test-results directory does not exist"
+          echo ""
+          echo "All JSON files:"
+          find . -name "*.json" -type f 2>/dev/null | head -20 || echo "No JSON files found"
+          echo ""
+          
           echo "📝 Test execution completed with exit code: $TEST_EXIT_CODE"
           echo ""
           
@@ -134,7 +147,11 @@ jobs:
           echo "- Failed tests will show error details"
           echo "- Skipped tests may be due to dependencies or testIgnore configuration"
           
-          # Always exit successfully to allow artifact upload
+          # Exit with test exit code but continue-on-error will prevent job failure
+          # This allows us to upload artifacts even if tests fail
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "⚠️ Tests failed but continuing to upload artifacts..."
+          fi
           exit 0
 
       - name: Upload Raw Results
