@@ -219,91 +219,76 @@ jobs:
 
       - name: Report test results
         if: always()
+        continue-on-error: true
         run: |
           echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          # First, try to generate summary from execution log if JSON is not available
-          if [ ! -f "test-results/playwright-report.json" ] && [ -f "test-execution.log" ]; then
-            echo "### 📊 Test Results Table (from Execution Log)" >> $GITHUB_STEP_SUMMARY
+          # Always try to generate table from execution log
+          if [ -f "test-execution.log" ]; then
+            echo "### 📊 Test Results Table" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| File | Passed | Self-Healed | Failed | Timed Out | Skipped | Interrupted | Duration |" >> $GITHUB_STEP_SUMMARY
             echo "|------|--------|-------------|--------|-----------|---------|-------------|----------|" >> $GITHUB_STEP_SUMMARY
             
-            # Extract test file results from log
-            # Pattern: [project] › tests/path/to/file.spec.ts:line:column › test-name
-            TEMP_FILE=$(mktemp)
-            grep -E "\[.*\] › tests/.*\.spec\.ts" test-execution.log | while IFS= read -r line; do
-              # Extract file path (simplified)
-              FILE=$(echo "$line" | sed -E 's/.*› tests\/([^:]+\.spec\.ts).*/\1/' | head -1)
-              if [ -n "$FILE" ] && [ "$FILE" != "$line" ]; then
-                # Determine status from context
-                if echo "$line" | grep -qiE "passed|✅"; then
-                  echo "$FILE|1 ✅|0 ❤️‍🩹|0|0 ⏰|0|0 ⚡|-" >> "$TEMP_FILE"
-                elif echo "$line" | grep -qiE "failed|❌|Error|Timeout"; then
-                  echo "$FILE|0|0 ❤️‍🩹|1 ❌|0 ⏰|0|0 ⚡|-" >> "$TEMP_FILE"
-                elif echo "$line" | grep -qiE "skipped|⏭️"; then
-                  echo "$FILE|0|0 ❤️‍🩹|0|0 ⏰|1 ⏭️|0 ⚡|-" >> "$TEMP_FILE"
-                fi
+            # Extract test results - look for test file patterns in log
+            # Pattern examples:
+            # - [logged-in-tests] › tests/logged-in/dashboard/dashboard-values.spec.ts:22:5 › dashboard-verify-values
+            # - 1 failed
+            # - 21 passed (23.3m)
+            
+            # Create a temporary file to store results
+            TEMP_RESULTS=$(mktemp)
+            
+            # Extract all test file paths and their status
+            grep -E "\[.*\] › tests/.*\.spec\.ts" test-execution.log | sed -E 's/.*› tests\/([^:]+\.spec\.ts).*/\1/' | sort -u | while read -r file; do
+              # Check if this file has a failed test
+              if grep -q "\[.*\] › tests/$file.*failed\|\[.*\] › tests/$file.*Error\|\[.*\] › tests/$file.*Timeout" test-execution.log; then
+                echo "$file|0|0 ❤️‍🩹|1 ❌|0 ⏰|0|0 ⚡|-" >> "$TEMP_RESULTS"
+              # Check if this file has a skipped test
+              elif grep -q "\[.*\] › tests/$file.*skipped" test-execution.log; then
+                echo "$file|0|0 ❤️‍🩹|0|0 ⏰|1 ⏭️|0 ⚡|-" >> "$TEMP_RESULTS"
+              # Otherwise assume passed
+              else
+                echo "$file|1 ✅|0 ❤️‍🩹|0|0 ⏰|0|0 ⚡|-" >> "$TEMP_RESULTS"
               fi
             done
             
-            # Remove duplicates and add to summary
-            if [ -f "$TEMP_FILE" ]; then
-              sort -u "$TEMP_FILE" | while IFS='|' read -r file passed healed failed timeout skipped interrupted duration; do
+            # Add results to summary
+            if [ -s "$TEMP_RESULTS" ]; then
+              sort -u "$TEMP_RESULTS" | while IFS='|' read -r file passed healed failed timeout skipped interrupted duration; do
                 echo "| $file | $passed | $healed | $failed | $timeout | $skipped | $interrupted | $duration |" >> $GITHUB_STEP_SUMMARY
               done
-              rm -f "$TEMP_FILE"
+            fi
+            rm -f "$TEMP_RESULTS"
+            
+            # Extract totals from the final summary line in log
+            # Look for pattern like: "1 failed\n2 did not run\n21 passed (23.3m)"
+            FINAL_SUMMARY=$(tail -20 test-execution.log | grep -E "[0-9]+ (passed|failed|skipped|did not run)" | tail -3)
+            
+            PASSED_COUNT=$(echo "$FINAL_SUMMARY" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
+            FAILED_COUNT=$(echo "$FINAL_SUMMARY" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
+            SKIPPED_COUNT=$(echo "$FINAL_SUMMARY" | grep -oE "[0-9]+ (skipped|did not run)" | grep -oE "[0-9]+" | head -1 || echo "0")
+            DURATION=$(echo "$FINAL_SUMMARY" | grep -oE "\([0-9]+\.[0-9]+m\)" | grep -oE "[0-9]+\.[0-9]+" | head -1 || echo "0")
+            
+            # If we couldn't parse, try alternative patterns
+            if [ "$PASSED_COUNT" = "0" ] && [ "$FAILED_COUNT" = "0" ]; then
+              # Try to find summary in different format
+              ALT_SUMMARY=$(grep -E "passed|failed" test-execution.log | tail -5)
+              PASSED_COUNT=$(echo "$ALT_SUMMARY" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
+              FAILED_COUNT=$(echo "$ALT_SUMMARY" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
             fi
             
-            # Extract totals from log summary line
-            SUMMARY_LINE=$(grep -E "[0-9]+ (passed|failed|skipped|did not run)" test-execution.log | tail -1)
-            PASSED_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
-            FAILED_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
-            SKIPPED_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "[0-9]+ (skipped|did not run)" | grep -oE "[0-9]+" | head -1 || echo "0")
-            DURATION=$(echo "$SUMMARY_LINE" | grep -oE "\([0-9]+\.[0-9]+m\)" | grep -oE "[0-9]+\.[0-9]+" | head -1 || echo "0")
+            TOTAL=$((PASSED_COUNT + FAILED_COUNT + SKIPPED_COUNT))
             
             echo "| **TOTAL** | **$PASSED_COUNT ✅** | **0 ❤️‍🩹** | **$FAILED_COUNT ❌** | **0 ⏰** | **$SKIPPED_COUNT ⏭️** | **0 ⚡** | **${DURATION}m** |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "*Note: Detailed results require playwright-report.json file. Check test-execution.log for full details.*" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
           
           echo "### 🔍 Test Results Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
-          echo "🔍 Checking for test result files..."
-          echo "#### 📁 File System Check" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -d "test-results" ]; then
-            echo "✅ test-results directory exists" >> $GITHUB_STEP_SUMMARY
-            echo "Contents:" >> $GITHUB_STEP_SUMMARY
-            ls -la test-results/ | head -20 >> $GITHUB_STEP_SUMMARY || echo "Cannot list directory" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ test-results directory does NOT exist" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -d "playwright-report" ]; then
-            echo "✅ playwright-report directory exists" >> $GITHUB_STEP_SUMMARY
-            echo "Contents:" >> $GITHUB_STEP_SUMMARY
-            ls -la playwright-report/ | head -20 >> $GITHUB_STEP_SUMMARY || echo "Cannot list directory" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ playwright-report directory does NOT exist" >> $GITHUB_STEP_SUMMARY
-          fi
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
-          if [ -f "test-execution.log" ]; then
-            echo "### 📝 Test Execution Log Summary" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Last 30 lines of execution log:" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -30 test-execution.log >> $GITHUB_STEP_SUMMARY || echo "Could not read log" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-          
+          # If JSON report exists, use it for more detailed analysis
           if [ -f "test-results/playwright-report.json" ]; then
             # Try to generate markdown report, but don't fail if it doesn't work
             MARKDOWN_OUTPUT=$(npm exec playwright-json-to-markdown < "test-results/playwright-report.json" 2>&1)
@@ -372,32 +357,42 @@ jobs:
               echo "**⏭️ Skipped Tests:** None" >> $GITHUB_STEP_SUMMARY
             fi
           else
-            echo "⚠️ Test results file (playwright-report.json) not found" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### 📊 Test Results from Execution Log" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            
-            # Try to parse test results from execution log
-            if [ -f "test-execution.log" ]; then
-              # Extract test summary from log
-              echo "Parsing test results from execution log..." >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              
-              # Look for test summary pattern in log
-              LOG_SUMMARY=$(grep -A 20 "passed\|failed\|skipped" test-execution.log | tail -30 || echo "")
-              if [ -n "$LOG_SUMMARY" ]; then
-                echo "Test execution summary:" >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
-                echo "$LOG_SUMMARY" >> $GITHUB_STEP_SUMMARY
-                echo '```' >> $GITHUB_STEP_SUMMARY
-              else
-                echo "Could not extract test summary from log" >> $GITHUB_STEP_SUMMARY
-              fi
-            fi
-            
+            echo "⚠️ JSON report file (playwright-report.json) not found" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Note:** JSON report file is required for detailed test analysis." >> $GITHUB_STEP_SUMMARY
-            echo "Check the 'Run Playwright tests' step logs for full test output." >> $GITHUB_STEP_SUMMARY
+            echo "Check the test results table above (generated from execution log) or the 'Run Playwright tests' step logs for full details." >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📁 File System Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d "test-results" ]; then
+            echo "✅ test-results directory exists" >> $GITHUB_STEP_SUMMARY
+            echo "Contents:" >> $GITHUB_STEP_SUMMARY
+            ls -la test-results/ | head -20 >> $GITHUB_STEP_SUMMARY || echo "Cannot list directory" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ test-results directory does NOT exist" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -d "playwright-report" ]; then
+            echo "✅ playwright-report directory exists" >> $GITHUB_STEP_SUMMARY
+            echo "Contents:" >> $GITHUB_STEP_SUMMARY
+            ls -la playwright-report/ | head -20 >> $GITHUB_STEP_SUMMARY || echo "Cannot list directory" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ playwright-report directory does NOT exist" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ -f "test-execution.log" ]; then
+            echo "### 📝 Test Execution Log Summary" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Last 30 lines of execution log:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -30 test-execution.log >> $GITHUB_STEP_SUMMARY || echo "Could not read log" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Post to Slack
