@@ -62,16 +62,42 @@ jobs:
           echo ""
           echo "📋 Running tests with detailed output..."
           echo "Note: Check the logs below for any test failures"
-          xvfb-run npx playwright test --reporter=list || true
+          
+          # Run tests and capture exit code
+          xvfb-run npx playwright test --reporter=list
+          TEST_EXIT_CODE=$?
+          
           echo ""
-          echo "📝 Test execution completed. Analyzing results..."
+          echo "📝 Test execution completed with exit code: $TEST_EXIT_CODE"
           echo ""
-          echo "✅ Test execution completed"
+          
+          # Check if report files were generated
+          echo "🔍 Checking for test result files..."
+          if [ -f "test-results/playwright-report.json" ]; then
+            echo "✅ JSON report found: test-results/playwright-report.json"
+            ls -lh test-results/playwright-report.json
+          else
+            echo "❌ JSON report NOT found: test-results/playwright-report.json"
+            echo "Checking test-results directory..."
+            ls -la test-results/ 2>/dev/null || echo "test-results directory does not exist"
+          fi
+          
+          if [ -d "playwright-report" ]; then
+            echo "✅ HTML report directory found: playwright-report"
+            ls -la playwright-report/ | head -10
+          else
+            echo "❌ HTML report directory NOT found: playwright-report"
+          fi
+          
           echo ""
           echo "📊 Summary:"
+          echo "- Test exit code: $TEST_EXIT_CODE"
           echo "- Check the test results above for failed/skipped tests"
           echo "- Failed tests will show error details"
           echo "- Skipped tests may be due to dependencies or testIgnore configuration"
+          
+          # Exit with the test exit code (but continue-on-error will prevent job failure)
+          exit $TEST_EXIT_CODE
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4
@@ -84,14 +110,21 @@ jobs:
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
         with:
           name: html-report
           path: playwright-report/
           retention-days: 3
+          if-no-files-found: warn
 
       - name: Report test results
         if: always()
         run: |
+          echo "🔍 Checking for test result files..."
+          ls -la test-results/ 2>/dev/null || echo "test-results directory does not exist"
+          ls -la playwright-report/ 2>/dev/null || echo "playwright-report directory does not exist"
+          echo ""
+          
           if [ -f "test-results/playwright-report.json" ]; then
             echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
             # Try to generate markdown report, but don't fail if it doesn't work
@@ -162,6 +195,7 @@ jobs:
       # Create a self-healing PR only when this workflow was not triggered by a pull-request.
       - name: Automatically create a pull request for fixing failed tests (if any)
         if: ${{ github.event_name != 'pull_request' }}
+        continue-on-error: true
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
