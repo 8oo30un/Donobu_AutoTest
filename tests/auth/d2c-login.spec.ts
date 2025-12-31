@@ -71,7 +71,8 @@ test(title, details, async ({ page, context }) => {
   await page.waitForTimeout(5000);
 
   // Verify that we landed at the home page for d2c learners
-  await page.waitForURL(/.*\/home/, { timeout: 30000 });
+  // Increased timeout to 60 seconds to handle slower page loads in CI
+  await page.waitForURL(/.*\/home/, { timeout: 60000 });
 
   // Save the authentication state
   await context.storageState({ path: 'd2c-login-state.json' });

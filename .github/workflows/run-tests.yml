@@ -225,19 +225,47 @@ jobs:
           
           # First, try to generate summary from execution log if JSON is not available
           if [ ! -f "test-results/playwright-report.json" ] && [ -f "test-execution.log" ]; then
-            echo "### Test Results from Execution Log" >> $GITHUB_STEP_SUMMARY
+            echo "### 📊 Test Results Table (from Execution Log)" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "| File | Passed | Self-Healed | Failed | Timed Out | Skipped | Interrupted | Duration |" >> $GITHUB_STEP_SUMMARY
             echo "|------|--------|-------------|--------|-----------|---------|-------------|----------|" >> $GITHUB_STEP_SUMMARY
             
-            # Parse test results from log (basic parsing)
-            PASSED_COUNT=$(grep -c "passed" test-execution.log 2>/dev/null || echo "0")
-            FAILED_COUNT=$(grep -c "failed" test-execution.log 2>/dev/null || echo "0")
-            SKIPPED_COUNT=$(grep -c "skipped" test-execution.log 2>/dev/null || echo "0")
+            # Extract test file results from log
+            # Pattern: [project] › tests/path/to/file.spec.ts:line:column › test-name
+            TEMP_FILE=$(mktemp)
+            grep -E "\[.*\] › tests/.*\.spec\.ts" test-execution.log | while IFS= read -r line; do
+              # Extract file path (simplified)
+              FILE=$(echo "$line" | sed -E 's/.*› tests\/([^:]+\.spec\.ts).*/\1/' | head -1)
+              if [ -n "$FILE" ] && [ "$FILE" != "$line" ]; then
+                # Determine status from context
+                if echo "$line" | grep -qiE "passed|✅"; then
+                  echo "$FILE|1 ✅|0 ❤️‍🩹|0|0 ⏰|0|0 ⚡|-" >> "$TEMP_FILE"
+                elif echo "$line" | grep -qiE "failed|❌|Error|Timeout"; then
+                  echo "$FILE|0|0 ❤️‍🩹|1 ❌|0 ⏰|0|0 ⚡|-" >> "$TEMP_FILE"
+                elif echo "$line" | grep -qiE "skipped|⏭️"; then
+                  echo "$FILE|0|0 ❤️‍🩹|0|0 ⏰|1 ⏭️|0 ⚡|-" >> "$TEMP_FILE"
+                fi
+              fi
+            done
             
-            echo "| **TOTAL** | **$PASSED_COUNT ✅** | **0 ❤️‍🩹** | **$FAILED_COUNT ❌** | **0 ⏰** | **$SKIPPED_COUNT ⏭️** | **0 ⚡** | - |" >> $GITHUB_STEP_SUMMARY
+            # Remove duplicates and add to summary
+            if [ -f "$TEMP_FILE" ]; then
+              sort -u "$TEMP_FILE" | while IFS='|' read -r file passed healed failed timeout skipped interrupted duration; do
+                echo "| $file | $passed | $healed | $failed | $timeout | $skipped | $interrupted | $duration |" >> $GITHUB_STEP_SUMMARY
+              done
+              rm -f "$TEMP_FILE"
+            fi
+            
+            # Extract totals from log summary line
+            SUMMARY_LINE=$(grep -E "[0-9]+ (passed|failed|skipped|did not run)" test-execution.log | tail -1)
+            PASSED_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
+            FAILED_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
+            SKIPPED_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "[0-9]+ (skipped|did not run)" | grep -oE "[0-9]+" | head -1 || echo "0")
+            DURATION=$(echo "$SUMMARY_LINE" | grep -oE "\([0-9]+\.[0-9]+m\)" | grep -oE "[0-9]+\.[0-9]+" | head -1 || echo "0")
+            
+            echo "| **TOTAL** | **$PASSED_COUNT ✅** | **0 ❤️‍🩹** | **$FAILED_COUNT ❌** | **0 ⏰** | **$SKIPPED_COUNT ⏭️** | **0 ⚡** | **${DURATION}m** |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "*Note: Detailed results require playwright-report.json file*" >> $GITHUB_STEP_SUMMARY
+            echo "*Note: Detailed results require playwright-report.json file. Check test-execution.log for full details.*" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
           
