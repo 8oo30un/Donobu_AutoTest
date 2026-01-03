@@ -254,35 +254,43 @@ jobs:
               fi
             done
             
-            # Add results to summary
+            # Add results to summary and count totals from actual table rows
+            PASSED_TOTAL=0
+            FAILED_TOTAL=0
+            SKIPPED_TOTAL=0
+            
             if [ -s "$TEMP_RESULTS" ]; then
-              sort -u "$TEMP_RESULTS" | while IFS='|' read -r file passed healed failed timeout skipped interrupted duration; do
+              while IFS='|' read -r file passed healed failed timeout skipped interrupted duration; do
                 echo "| $file | $passed | $healed | $failed | $timeout | $skipped | $interrupted | $duration |" >> $GITHUB_STEP_SUMMARY
-              done
+                # Count totals from actual table rows (more accurate)
+                if echo "$passed" | grep -q "✅"; then
+                  PASSED_TOTAL=$((PASSED_TOTAL + 1))
+                fi
+                if echo "$failed" | grep -q "❌"; then
+                  FAILED_TOTAL=$((FAILED_TOTAL + 1))
+                fi
+                if echo "$skipped" | grep -q "⏭️"; then
+                  SKIPPED_TOTAL=$((SKIPPED_TOTAL + 1))
+                fi
+              done < <(sort -u "$TEMP_RESULTS")
             fi
             rm -f "$TEMP_RESULTS"
             
-            # Extract totals from the final summary line in log
-            # Look for pattern like: "1 failed\n2 did not run\n21 passed (23.3m)"
+            # Extract duration from the final summary line in log
             FINAL_SUMMARY=$(tail -20 test-execution.log | grep -E "[0-9]+ (passed|failed|skipped|did not run)" | tail -3)
-            
-            PASSED_COUNT=$(echo "$FINAL_SUMMARY" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
-            FAILED_COUNT=$(echo "$FINAL_SUMMARY" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
-            SKIPPED_COUNT=$(echo "$FINAL_SUMMARY" | grep -oE "[0-9]+ (skipped|did not run)" | grep -oE "[0-9]+" | head -1 || echo "0")
             DURATION=$(echo "$FINAL_SUMMARY" | grep -oE "\([0-9]+\.[0-9]+m\)" | grep -oE "[0-9]+\.[0-9]+" | head -1 || echo "0")
             
-            # If we couldn't parse, try alternative patterns
-            if [ "$PASSED_COUNT" = "0" ] && [ "$FAILED_COUNT" = "0" ]; then
-              # Try to find summary in different format
-              ALT_SUMMARY=$(grep -E "passed|failed" test-execution.log | tail -5)
-              PASSED_COUNT=$(echo "$ALT_SUMMARY" | grep -oE "[0-9]+ passed" | grep -oE "[0-9]+" | head -1 || echo "0")
-              FAILED_COUNT=$(echo "$ALT_SUMMARY" | grep -oE "[0-9]+ failed" | grep -oE "[0-9]+" | head -1 || echo "0")
-            fi
+            # Use totals from actual table rows (more accurate than parsing log)
+            TOTAL=$((PASSED_TOTAL + FAILED_TOTAL + SKIPPED_TOTAL))
             
-            TOTAL=$((PASSED_COUNT + FAILED_COUNT + SKIPPED_COUNT))
-            
-            echo "| **TOTAL** | **$PASSED_COUNT ✅** | **0 ❤️‍🩹** | **$FAILED_COUNT ❌** | **0 ⏰** | **$SKIPPED_COUNT ⏭️** | **0 ⚡** | **${DURATION}m** |" >> $GITHUB_STEP_SUMMARY
+            echo "| **TOTAL** | **$PASSED_TOTAL ✅** | **0 ❤️‍🩹** | **$FAILED_TOTAL ❌** | **0 ⏰** | **$SKIPPED_TOTAL ⏭️** | **0 ⚡** | **${DURATION}m** |" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Save totals to file for Slack notification
+            echo "PASSED_TOTAL=$PASSED_TOTAL" >> test-totals.env
+            echo "FAILED_TOTAL=$FAILED_TOTAL" >> test-totals.env
+            echo "SKIPPED_TOTAL=$SKIPPED_TOTAL" >> test-totals.env
+            echo "DURATION=$DURATION" >> test-totals.env
           fi
           
           echo "### 🔍 Test Results Analysis" >> $GITHUB_STEP_SUMMARY
@@ -402,13 +410,142 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           if [ -n "$SLACK_WEBHOOK_URL" ]; then
-            if [ -f "test-results/playwright-report.json" ]; then
-              WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-              SLACK_PAYLOAD=$(npm exec playwright-json-to-slack-json -- --report-url "$WORKFLOW_URL" < "test-results/playwright-report.json")
-              curl --header 'Content-type: application/json' --data "$SLACK_PAYLOAD" "$SLACK_WEBHOOK_URL"
+            WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            WORKFLOW_RUN="${GITHUB_REPOSITORY} - Run #${GITHUB_RUN_NUMBER}"
+            
+            # Load totals if available
+            if [ -f "test-totals.env" ]; then
+              source test-totals.env
             else
-              echo "⚠️ test-results/playwright-report.json not found, skipping Slack notification."
+              PASSED_TOTAL=0
+              FAILED_TOTAL=0
+              SKIPPED_TOTAL=0
+              DURATION=0
             fi
+            
+            # Determine status emoji
+            if [ "$FAILED_TOTAL" -eq 0 ] && [ "$SKIPPED_TOTAL" -eq 0 ]; then
+              STATUS_EMOJI="✅"
+              STATUS_TEXT="All tests passed"
+            elif [ "$FAILED_TOTAL" -gt 0 ]; then
+              STATUS_EMOJI="❌"
+              STATUS_TEXT="$FAILED_TOTAL test(s) failed"
+            else
+              STATUS_EMOJI="⚠️"
+              STATUS_TEXT="$SKIPPED_TOTAL test(s) skipped"
+            fi
+            
+            # Build test results list from execution log
+            TEST_LIST_FILE=$(mktemp)
+            if [ -f "test-execution.log" ]; then
+              # Extract test file results
+              TEMP_RESULTS=$(mktemp)
+              grep -E "\[.*\] › tests/.*\.spec\.ts" test-execution.log | sed -E 's/.*› tests\/([^:]+\.spec\.ts).*/\1/' | sort -u | while read -r file; do
+                if grep -q "\[.*\] › tests/$file.*failed\|\[.*\] › tests/$file.*Error\|\[.*\] › tests/$file.*Timeout" test-execution.log; then
+                  echo "$file|❌" >> "$TEMP_RESULTS"
+                elif grep -q "\[.*\] › tests/$file.*skipped" test-execution.log; then
+                  echo "$file|⏭️" >> "$TEMP_RESULTS"
+                else
+                  echo "$file|✅" >> "$TEMP_RESULTS"
+                fi
+              done
+              
+              if [ -s "$TEMP_RESULTS" ]; then
+                sort -u "$TEMP_RESULTS" | head -20 | while IFS='|' read -r file status; do
+                  echo "• \`$file\` $status" >> "$TEST_LIST_FILE"
+                done
+              fi
+              rm -f "$TEMP_RESULTS"
+            fi
+            TEST_LIST=$(cat "$TEST_LIST_FILE" 2>/dev/null | tr '\n' '\n' || echo "")
+            rm -f "$TEST_LIST_FILE"
+            
+            # Create Slack message payload with blocks for better formatting
+            SLACK_PAYLOAD=$(cat <<EOF
+{
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "${STATUS_EMOJI} Playwright Test Results"
+      }
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Repository:*\n${GITHUB_REPOSITORY}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Run:*\n#${GITHUB_RUN_NUMBER}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Status:*\n${STATUS_TEXT}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Duration:*\n${DURATION}m"
+        }
+      ]
+    },
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "mrkdwn",
+          "text": "*Passed:*\n${PASSED_TOTAL} ✅"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Failed:*\n${FAILED_TOTAL} ❌"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "*Skipped:*\n${SKIPPED_TOTAL} ⏭️"
+        }
+      ]
+    }
+EOF
+)
+            
+            # Add test results list if available
+            if [ -n "$TEST_LIST" ]; then
+              TEST_LIST_ESCAPED=$(echo "$TEST_LIST" | sed 's/"/\\"/g' | tr '\n' '\\n')
+              SLACK_PAYLOAD="${SLACK_PAYLOAD},
+    {
+      \"type\": \"section\",
+      \"text\": {
+        \"type\": \"mrkdwn\",
+        \"text\": \"*Test Results:*\\n${TEST_LIST_ESCAPED}\"
+      }
+    }"
+            fi
+            
+            # Add view details button
+            SLACK_PAYLOAD="${SLACK_PAYLOAD},
+    {
+      \"type\": \"actions\",
+      \"elements\": [
+        {
+          \"type\": \"button\",
+          \"text\": {
+            \"type\": \"plain_text\",
+            \"text\": \"View Details\"
+          },
+          \"url\": \"${WORKFLOW_URL}\"
+        }
+      ]
+    }
+  ]
+}"
+            
+            curl -X POST -H 'Content-type: application/json' \
+              --data "$SLACK_PAYLOAD" \
+              "$SLACK_WEBHOOK_URL" || echo "Failed to send Slack notification"
           else
             echo "SLACK_WEBHOOK_URL secret not present, skipping Slack notification."
           fi
