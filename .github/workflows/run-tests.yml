@@ -9,7 +9,7 @@ on:
 jobs:
   run-donobu-flows:
     runs-on: ubuntu-latest
-    timeout-minutes: 180  # Job 타임아웃 설정 (3시간) - workers 1로 인해 실행 시간 증가
+    timeout-minutes: 180 # Job 타임아웃 설정 (3시간) - workers 1로 인해 실행 시간 증가
 
     steps:
       - name: Checkout repository
@@ -62,11 +62,11 @@ jobs:
           echo ""
           echo "📋 Running tests with detailed output..."
           echo "Note: Check the logs below for any test failures"
-          
+
           # Ensure test-results directory exists
           mkdir -p test-results
           mkdir -p playwright-report
-          
+
           # Run tests and capture exit code
           echo "Running: xvfb-run npx playwright test --reporter=list"
           echo "Note: JSON and HTML reporters are configured in playwright.config.ts"
@@ -76,14 +76,14 @@ jobs:
           echo "Current directory: $(pwd)"
           echo "Playwright config: $(ls -la playwright.config.ts 2>/dev/null || echo 'NOT FOUND')"
           echo ""
-          
+
           # Run tests (reporter is already configured in playwright.config.ts)
           # Don't override reporter settings to avoid conflicts
           set +e  # Don't exit on error
           xvfb-run npx playwright test --reporter=list 2>&1 | tee test-execution.log
           TEST_EXIT_CODE=$?
           set -e  # Re-enable exit on error
-          
+
           echo ""
           echo "=========================================="
           if [ $TEST_EXIT_CODE -eq 0 ]; then
@@ -93,10 +93,10 @@ jobs:
           fi
           echo "=========================================="
           echo ""
-          
+
           # Wait a moment for reporters to finish writing files
           sleep 2
-          
+
           # Check what was actually created
           echo "📁 Checking what files were created..."
           echo "All files in current directory:"
@@ -108,7 +108,7 @@ jobs:
           echo "All JSON files:"
           find . -name "*.json" -type f 2>/dev/null | head -20 || echo "No JSON files found"
           echo ""
-          
+
           # Verify report file was created
           if [ -f "test-results/playwright-report.json" ]; then
             echo "✅ SUCCESS: test-results/playwright-report.json was created"
@@ -136,17 +136,17 @@ jobs:
             fi
           fi
           echo ""
-          
+
           echo "📝 Test execution completed with exit code: $TEST_EXIT_CODE"
           echo ""
-          
+
           # Check if report files were generated
           echo "🔍 Checking for test result files..."
           echo "Current directory: $(pwd)"
           echo "Directory contents:"
           ls -la | head -20
           echo ""
-          
+
           if [ -f "test-results/playwright-report.json" ]; then
             echo "✅ JSON report found: test-results/playwright-report.json"
             ls -lh test-results/playwright-report.json
@@ -164,7 +164,7 @@ jobs:
             echo "Checking for any JSON files in current directory:"
             find . -name "*.json" -type f 2>/dev/null | head -10 || echo "No JSON files found"
           fi
-          
+
           if [ -d "playwright-report" ]; then
             echo "✅ HTML report directory found: playwright-report"
             echo "Contents:"
@@ -172,14 +172,14 @@ jobs:
           else
             echo "❌ HTML report directory NOT found: playwright-report"
           fi
-          
+
           echo ""
           echo "📊 Summary:"
           echo "- Test exit code: $TEST_EXIT_CODE"
           echo "- Check the test results above for failed/skipped tests"
           echo "- Failed tests will show error details"
           echo "- Skipped tests may be due to dependencies or testIgnore configuration"
-          
+
           # Exit with test exit code but continue-on-error will prevent job failure
           # This allows us to upload artifacts even if tests fail
           if [ $TEST_EXIT_CODE -ne 0 ]; then
@@ -196,7 +196,7 @@ jobs:
           path: test-results/
           retention-days: 3
           if-no-files-found: warn
-      
+
       - name: Upload Test Execution Log
         uses: actions/upload-artifact@v4
         if: always()
@@ -223,7 +223,7 @@ jobs:
         run: |
           echo "## 📊 Test Results Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # Always try to generate table from execution log
           if [ -f "test-execution.log" ]; then
             echo "### 📊 Test Results Table" >> $GITHUB_STEP_SUMMARY
@@ -292,10 +292,10 @@ jobs:
             echo "SKIPPED_TOTAL=$SKIPPED_TOTAL" >> test-totals.env
             echo "DURATION=$DURATION" >> test-totals.env
           fi
-          
+
           echo "### 🔍 Test Results Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           # If JSON report exists, use it for more detailed analysis
           if [ -f "test-results/playwright-report.json" ]; then
             # Try to generate markdown report, but don't fail if it doesn't work
@@ -370,11 +370,11 @@ jobs:
             echo "**Note:** JSON report file is required for detailed test analysis." >> $GITHUB_STEP_SUMMARY
             echo "Check the test results table above (generated from execution log) or the 'Run Playwright tests' step logs for full details." >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📁 File System Check" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -d "test-results" ]; then
             echo "✅ test-results directory exists" >> $GITHUB_STEP_SUMMARY
             echo "Contents:" >> $GITHUB_STEP_SUMMARY
@@ -383,7 +383,7 @@ jobs:
             echo "❌ test-results directory does NOT exist" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -d "playwright-report" ]; then
             echo "✅ playwright-report directory exists" >> $GITHUB_STEP_SUMMARY
             echo "Contents:" >> $GITHUB_STEP_SUMMARY
@@ -392,7 +392,7 @@ jobs:
             echo "❌ playwright-report directory does NOT exist" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -f "test-execution.log" ]; then
             echo "### 📝 Test Execution Log Summary" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -408,7 +408,7 @@ jobs:
         continue-on-error: true
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_USER_EMAIL: ${{ secrets.SLACK_USER_EMAIL }}
+          SLACK_USER_EMAIL: ${{ secrets.SLACK_USER_EMAIL || vars.SLACK_USER_EMAIL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           # Use Bot Token for direct message (preferred) or fallback to webhook
@@ -632,10 +632,10 @@ jobs:
           title: "[Fixed] Playwright tests"
           body: |
             This PR was automatically created to fix failing Playwright tests.
-            
+
             ## Test Results
             Check the workflow run for detailed test results.
-            
+
             ## Changes
             This PR includes fixes for the failing tests detected in the last run.
           branch: fix-playwright-tests-for-${{ github.ref_name }}
