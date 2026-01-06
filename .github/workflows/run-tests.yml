@@ -572,17 +572,24 @@ jobs:
             else
               echo "✅ Found Slack user ID: $USER_ID"
               
-              # Open DM conversation
+              # Open DM conversation (or use existing channel)
               DM_RESPONSE=$(curl -s -X POST "https://slack.com/api/conversations.open" \
                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
                 -H "Content-Type: application/json" \
                 -d "{\"users\":\"$USER_ID\"}")
               
               CHANNEL_ID=$(echo "$DM_RESPONSE" | jq -r '.channel.id // empty')
+              DM_ERROR=$(echo "$DM_RESPONSE" | jq -r '.error // empty')
               
               if [ -z "$CHANNEL_ID" ] || [ "$CHANNEL_ID" = "null" ]; then
-                echo "❌ Failed to open DM conversation"
+                echo "⚠️ Failed to open DM conversation: $DM_ERROR"
                 echo "Response: $DM_RESPONSE"
+                echo ""
+                echo "💡 해결 방법:"
+                echo "1. Slack에서 'GitHub Actions Bot-Ray'에게 먼저 메시지를 보내주세요"
+                echo "2. 또는 Slack App 설정에서 'im:write' 권한이 있는지 확인하세요"
+                echo ""
+                echo "사용자에게 직접 메시지를 보내려면 사용자가 Bot에게 먼저 메시지를 보내야 합니다."
               else
                 echo "✅ Opened DM channel: $CHANNEL_ID"
                 
@@ -592,11 +599,21 @@ jobs:
                   -H "Content-Type: application/json" \
                   -d "{\"channel\":\"$CHANNEL_ID\",\"blocks\":$(cat "$SLACK_PAYLOAD_FILE" | jq '.blocks')}")
                 
-                if echo "$SEND_RESPONSE" | jq -e '.ok == true' > /dev/null; then
+                SEND_OK=$(echo "$SEND_RESPONSE" | jq -r '.ok // false')
+                SEND_ERROR=$(echo "$SEND_RESPONSE" | jq -r '.error // empty')
+                
+                if [ "$SEND_OK" = "true" ]; then
                   echo "✅ Successfully sent Slack DM to $SLACK_USER_EMAIL"
                 else
-                  echo "❌ Failed to send Slack DM"
+                  echo "❌ Failed to send Slack DM: $SEND_ERROR"
                   echo "Response: $SEND_RESPONSE"
+                  echo ""
+                  echo "💡 해결 방법:"
+                  echo "1. Slack에서 'GitHub Actions Bot-Ray'에게 먼저 메시지를 보내주세요"
+                  echo "2. Slack App 설정에서 다음 권한이 있는지 확인하세요:"
+                  echo "   - chat:write"
+                  echo "   - im:write"
+                  echo "   - users:read.email"
                 fi
               fi
             fi
