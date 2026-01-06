@@ -407,9 +407,13 @@ jobs:
         if: always()
         continue-on-error: true
         env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_USER_EMAIL: ${{ secrets.SLACK_USER_EMAIL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
-          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+          # Use Bot Token for direct message (preferred) or fallback to webhook
+          if [ -n "$SLACK_BOT_TOKEN" ] && [ -n "$SLACK_USER_EMAIL" ]; then
+            echo "📨 Sending Slack DM using Bot Token..."
             WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             WORKFLOW_RUN="${GITHUB_REPOSITORY} - Run #${GITHUB_RUN_NUMBER}"
             
@@ -554,13 +558,67 @@ jobs:
                 ]
               }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
             
+            # Get user ID from email
+            USER_RESPONSE=$(curl -s -X POST "https://slack.com/api/users.lookupByEmail" \
+              -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"email\":\"$SLACK_USER_EMAIL\"}")
+            
+            USER_ID=$(echo "$USER_RESPONSE" | jq -r '.user.id // empty')
+            
+            if [ -z "$USER_ID" ] || [ "$USER_ID" = "null" ]; then
+              echo "❌ Failed to find Slack user with email: $SLACK_USER_EMAIL"
+              echo "Response: $USER_RESPONSE"
+            else
+              echo "✅ Found Slack user ID: $USER_ID"
+              
+              # Open DM conversation
+              DM_RESPONSE=$(curl -s -X POST "https://slack.com/api/conversations.open" \
+                -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "{\"users\":\"$USER_ID\"}")
+              
+              CHANNEL_ID=$(echo "$DM_RESPONSE" | jq -r '.channel.id // empty')
+              
+              if [ -z "$CHANNEL_ID" ] || [ "$CHANNEL_ID" = "null" ]; then
+                echo "❌ Failed to open DM conversation"
+                echo "Response: $DM_RESPONSE"
+              else
+                echo "✅ Opened DM channel: $CHANNEL_ID"
+                
+                # Send message to DM
+                SEND_RESPONSE=$(curl -s -X POST "https://slack.com/api/chat.postMessage" \
+                  -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"channel\":\"$CHANNEL_ID\",\"blocks\":$(cat "$SLACK_PAYLOAD_FILE" | jq '.blocks')}")
+                
+                if echo "$SEND_RESPONSE" | jq -e '.ok == true' > /dev/null; then
+                  echo "✅ Successfully sent Slack DM to $SLACK_USER_EMAIL"
+                else
+                  echo "❌ Failed to send Slack DM"
+                  echo "Response: $SEND_RESPONSE"
+                fi
+              fi
+            fi
+            
+            rm -f "$SLACK_PAYLOAD_FILE"
+          elif [ -n "$SLACK_WEBHOOK_URL" ]; then
+            # Fallback to webhook if Bot Token is not available
+            echo "📨 Sending Slack notification using Webhook (fallback)..."
+            
             curl -X POST -H 'Content-type: application/json' \
               --data @"$SLACK_PAYLOAD_FILE" \
               "$SLACK_WEBHOOK_URL" || echo "Failed to send Slack notification"
             
             rm -f "$SLACK_PAYLOAD_FILE"
           else
-            echo "SLACK_WEBHOOK_URL secret not present, skipping Slack notification."
+            echo "⚠️ SLACK_BOT_TOKEN and SLACK_USER_EMAIL (or SLACK_WEBHOOK_URL) not set, skipping Slack notification."
+            echo "To enable Slack DM notifications, set the following GitHub Secrets:"
+            echo "  - SLACK_BOT_TOKEN: Your Slack Bot Token (xoxb-...)"
+            echo "  - SLACK_USER_EMAIL: Your Slack email address"
+            echo ""
+            echo "Or use webhook:"
+            echo "  - SLACK_WEBHOOK_URL: Your Slack Incoming Webhook URL"
           fi
 
       # Create a self-healing PR only when this workflow was not triggered by a pull-request.
