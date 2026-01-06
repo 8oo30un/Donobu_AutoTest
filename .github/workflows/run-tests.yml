@@ -457,95 +457,108 @@ jobs:
               fi
               rm -f "$TEMP_RESULTS"
             fi
-            TEST_LIST=$(cat "$TEST_LIST_FILE" 2>/dev/null | tr '\n' '\n' || echo "")
+            TEST_LIST=$(cat "$TEST_LIST_FILE" 2>/dev/null || echo "")
             rm -f "$TEST_LIST_FILE"
             
-            # Create Slack message payload with blocks for better formatting
-            SLACK_PAYLOAD=$(cat <<EOF
-{
-  "blocks": [
-    {
-      "type": "header",
-      "text": {
-        "type": "plain_text",
-        "text": "${STATUS_EMOJI} Playwright Test Results"
-      }
-    },
-    {
-      "type": "section",
-      "fields": [
-        {
-          "type": "mrkdwn",
-          "text": "*Repository:*\n${GITHUB_REPOSITORY}"
-        },
-        {
-          "type": "mrkdwn",
-          "text": "*Run:*\n#${GITHUB_RUN_NUMBER}"
-        },
-        {
-          "type": "mrkdwn",
-          "text": "*Status:*\n${STATUS_TEXT}"
-        },
-        {
-          "type": "mrkdwn",
-          "text": "*Duration:*\n${DURATION}m"
-        }
-      ]
-    },
-    {
-      "type": "section",
-      "fields": [
-        {
-          "type": "mrkdwn",
-          "text": "*Passed:*\n${PASSED_TOTAL} ✅"
-        },
-        {
-          "type": "mrkdwn",
-          "text": "*Failed:*\n${FAILED_TOTAL} ❌"
-        },
-        {
-          "type": "mrkdwn",
-          "text": "*Skipped:*\n${SKIPPED_TOTAL} ⏭️"
-        }
-      ]
-    }
-EOF
-)
+            # Create Slack message payload using jq to avoid YAML parsing issues
+            SLACK_PAYLOAD_FILE=$(mktemp)
+            
+            # Build blocks array
+            jq -n \
+              --arg status_emoji "$STATUS_EMOJI" \
+              --arg repo "$GITHUB_REPOSITORY" \
+              --arg run_num "$GITHUB_RUN_NUMBER" \
+              --arg status_text "$STATUS_TEXT" \
+              --arg duration "$DURATION" \
+              --arg passed "$PASSED_TOTAL" \
+              --arg failed "$FAILED_TOTAL" \
+              --arg skipped "$SKIPPED_TOTAL" \
+              --arg workflow_url "$WORKFLOW_URL" \
+              --arg test_list "$TEST_LIST" \
+              '{
+                "blocks": [
+                  {
+                    "type": "header",
+                    "text": {
+                      "type": "plain_text",
+                      "text": ($status_emoji + " Playwright Test Results")
+                    }
+                  },
+                  {
+                    "type": "section",
+                    "fields": [
+                      {
+                        "type": "mrkdwn",
+                        "text": ("*Repository:*\n" + $repo)
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": ("*Run:*\n#" + $run_num)
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": ("*Status:*\n" + $status_text)
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": ("*Duration:*\n" + $duration + "m")
+                      }
+                    ]
+                  },
+                  {
+                    "type": "section",
+                    "fields": [
+                      {
+                        "type": "mrkdwn",
+                        "text": ("*Passed:*\n" + $passed + " ✅")
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": ("*Failed:*\n" + $failed + " ❌")
+                      },
+                      {
+                        "type": "mrkdwn",
+                        "text": ("*Skipped:*\n" + $skipped + " ⏭️")
+                      }
+                    ]
+                  }
+                ]
+              }' > "$SLACK_PAYLOAD_FILE"
             
             # Add test results list if available
             if [ -n "$TEST_LIST" ]; then
-              TEST_LIST_ESCAPED=$(echo "$TEST_LIST" | sed 's/"/\\"/g' | tr '\n' '\\n')
-              SLACK_PAYLOAD="${SLACK_PAYLOAD},
-    {
-      \"type\": \"section\",
-      \"text\": {
-        \"type\": \"mrkdwn\",
-        \"text\": \"*Test Results:*\\n${TEST_LIST_ESCAPED}\"
-      }
-    }"
+              TEST_LIST_ESCAPED=$(echo "$TEST_LIST" | jq -Rs . | sed 's/^"//;s/"$//')
+              jq --arg test_list_text "$TEST_LIST" \
+                '.blocks += [{
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ("*Test Results:*\n" + $test_list_text)
+                  }
+                }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
             fi
             
             # Add view details button
-            SLACK_PAYLOAD="${SLACK_PAYLOAD},
-    {
-      \"type\": \"actions\",
-      \"elements\": [
-        {
-          \"type\": \"button\",
-          \"text\": {
-            \"type\": \"plain_text\",
-            \"text\": \"View Details\"
-          },
-          \"url\": \"${WORKFLOW_URL}\"
-        }
-      ]
-    }
-  ]
-}"
+            jq --arg workflow_url "$WORKFLOW_URL" \
+              '.blocks += [{
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "View Details"
+                    },
+                    "url": $workflow_url
+                  }
+                ]
+              }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
             
             curl -X POST -H 'Content-type: application/json' \
-              --data "$SLACK_PAYLOAD" \
+              --data @"$SLACK_PAYLOAD_FILE" \
               "$SLACK_WEBHOOK_URL" || echo "Failed to send Slack notification"
+            
+            rm -f "$SLACK_PAYLOAD_FILE"
           else
             echo "SLACK_WEBHOOK_URL secret not present, skipping Slack notification."
           fi
