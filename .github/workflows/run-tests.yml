@@ -408,7 +408,7 @@ jobs:
         continue-on-error: true
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-          SLACK_USER_EMAIL: ${{ secrets.SLACK_USER_EMAIL || vars.SLACK_USER_EMAIL }}
+          SLACK_USER_EMAIL: ${{ secrets.SLACK_USER_EMAIL || vars.slack_user_email || vars.SLACK_USER_EMAIL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           # Use Bot Token for direct message (preferred) or fallback to webhook
