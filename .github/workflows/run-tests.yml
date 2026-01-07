@@ -411,6 +411,32 @@ jobs:
           SLACK_USER_EMAIL: ${{ secrets.SLACK_USER_EMAIL || vars.slack_user_email || vars.SLACK_USER_EMAIL }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
+          echo "=========================================="
+          echo "📨 Slack Notification Setup"
+          echo "=========================================="
+          echo "Checking environment variables..."
+          
+          if [ -z "$SLACK_BOT_TOKEN" ]; then
+            echo "❌ SLACK_BOT_TOKEN is not set"
+          else
+            echo "✅ SLACK_BOT_TOKEN is set (length: ${#SLACK_BOT_TOKEN} chars)"
+            echo "   Token starts with: ${SLACK_BOT_TOKEN:0:10}..."
+          fi
+          
+          if [ -z "$SLACK_USER_EMAIL" ]; then
+            echo "❌ SLACK_USER_EMAIL is not set"
+          else
+            echo "✅ SLACK_USER_EMAIL is set: $SLACK_USER_EMAIL"
+          fi
+          
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "⚠️ SLACK_WEBHOOK_URL is not set (will not use webhook fallback)"
+          else
+            echo "✅ SLACK_WEBHOOK_URL is set"
+          fi
+          
+          echo ""
+          
           # Use Bot Token for direct message (preferred) or fallback to webhook
           if [ -n "$SLACK_BOT_TOKEN" ] && [ -n "$SLACK_USER_EMAIL" ]; then
             echo "📨 Sending Slack DM using Bot Token..."
@@ -638,6 +664,10 @@ jobs:
             fi
             
             rm -f "$SLACK_PAYLOAD_FILE"
+            echo ""
+            echo "=========================================="
+            echo "✅ Slack notification step completed"
+            echo "=========================================="
           elif [ -n "$SLACK_WEBHOOK_URL" ]; then
             # Fallback to webhook if Bot Token is not available
             echo "📨 Sending Slack notification using Webhook (fallback)..."
@@ -648,13 +678,20 @@ jobs:
             
             rm -f "$SLACK_PAYLOAD_FILE"
           else
-            echo "⚠️ SLACK_BOT_TOKEN and SLACK_USER_EMAIL (or SLACK_WEBHOOK_URL) not set, skipping Slack notification."
+            echo ""
+            echo "=========================================="
+            echo "⚠️ Slack Notification Skipped"
+            echo "=========================================="
+            echo "SLACK_BOT_TOKEN and SLACK_USER_EMAIL (or SLACK_WEBHOOK_URL) not set"
+            echo ""
             echo "To enable Slack DM notifications, set the following GitHub Secrets:"
             echo "  - SLACK_BOT_TOKEN: Your Slack Bot Token (xoxb-...)"
             echo "  - SLACK_USER_EMAIL: Your Slack email address"
             echo ""
             echo "Or use webhook:"
             echo "  - SLACK_WEBHOOK_URL: Your Slack Incoming Webhook URL"
+            echo ""
+            echo "=========================================="
           fi
 
       # Create a self-healing PR only when this workflow was not triggered by a pull-request.
