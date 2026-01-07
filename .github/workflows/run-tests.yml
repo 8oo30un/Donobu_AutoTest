@@ -584,30 +584,77 @@ jobs:
                 ]
               }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
             
-            # Get user ID from email
-            echo "🔍 Looking up Slack user by email: $SLACK_USER_EMAIL"
-            
-            # Create JSON payload using jq to ensure proper formatting
-            EMAIL_PAYLOAD=$(jq -n --arg email "$SLACK_USER_EMAIL" '{email: $email}')
-            echo "📤 Request payload: $EMAIL_PAYLOAD"
-            
-            USER_RESPONSE=$(curl -s -X POST "https://slack.com/api/users.lookupByEmail" \
+            # First, verify the Bot Token works by checking auth.test
+            echo "🔍 Verifying Bot Token..."
+            AUTH_RESPONSE=$(curl -s -X POST "https://slack.com/api/auth.test" \
               -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-              -H "Content-Type: application/json; charset=utf-8" \
-              -d "$EMAIL_PAYLOAD")
+              -H "Content-Type: application/json")
             
-            USER_OK=$(echo "$USER_RESPONSE" | jq -r '.ok // false')
-            USER_ID=$(echo "$USER_RESPONSE" | jq -r '.user.id // empty')
-            USER_ERROR=$(echo "$USER_RESPONSE" | jq -r '.error // empty')
-            
-            if [ "$USER_OK" != "true" ] || [ -z "$USER_ID" ] || [ "$USER_ID" = "null" ]; then
-              echo "❌ Failed to find Slack user with email: $SLACK_USER_EMAIL"
-              echo "Error: $USER_ERROR"
-              echo "Full response: $USER_RESPONSE"
+            AUTH_OK=$(echo "$AUTH_RESPONSE" | jq -r '.ok // false')
+            if [ "$AUTH_OK" != "true" ]; then
+              AUTH_ERROR=$(echo "$AUTH_RESPONSE" | jq -r '.error // unknown')
+              echo "❌ Bot Token verification failed: $AUTH_ERROR"
+              echo "Full response: $AUTH_RESPONSE"
               echo ""
               echo "💡 확인 사항:"
-              echo "1. 이메일 주소가 정확한지 확인하세요: $SLACK_USER_EMAIL"
-              echo "2. 해당 이메일로 Slack 워크스페이스에 가입되어 있는지 확인하세요"
+              echo "1. SLACK_BOT_TOKEN이 올바른지 확인하세요"
+              echo "2. Bot이 워크스페이스에 설치되어 있는지 확인하세요"
+            else
+              BOT_USER_ID=$(echo "$AUTH_RESPONSE" | jq -r '.user_id // empty')
+              echo "✅ Bot Token verified (Bot User ID: $BOT_USER_ID)"
+              
+              # Get user ID from email
+              echo "🔍 Looking up Slack user by email: $SLACK_USER_EMAIL"
+              
+              # Try users.lookupByEmail first
+              EMAIL_PAYLOAD=$(jq -n --arg email "$SLACK_USER_EMAIL" '{email: $email}')
+              echo "📤 Request payload: $EMAIL_PAYLOAD"
+              
+              USER_RESPONSE=$(curl -s -X POST "https://slack.com/api/users.lookupByEmail" \
+                -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                -H "Content-Type: application/json; charset=utf-8" \
+                -d "$EMAIL_PAYLOAD")
+              
+              USER_OK=$(echo "$USER_RESPONSE" | jq -r '.ok // false')
+              USER_ID=$(echo "$USER_RESPONSE" | jq -r '.user.id // empty')
+              USER_ERROR=$(echo "$USER_RESPONSE" | jq -r '.error // empty')
+              
+              # If lookupByEmail fails, try users.list as fallback
+              if [ "$USER_OK" != "true" ] || [ -z "$USER_ID" ] || [ "$USER_ID" = "null" ]; then
+                echo "⚠️ users.lookupByEmail failed: $USER_ERROR"
+                echo "Trying alternative method: users.list..."
+                
+                # Get all users and find by email
+                USERS_LIST_RESPONSE=$(curl -s -X GET "https://slack.com/api/users.list" \
+                  -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+                  -H "Content-Type: application/json")
+                
+                USERS_LIST_OK=$(echo "$USERS_LIST_RESPONSE" | jq -r '.ok // false')
+                if [ "$USERS_LIST_OK" = "true" ]; then
+                  USER_ID=$(echo "$USERS_LIST_RESPONSE" | jq -r ".members[] | select(.profile.email == \"$SLACK_USER_EMAIL\") | .id" | head -1)
+                  
+                  if [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
+                    echo "✅ Found user via users.list: $USER_ID"
+                    USER_OK="true"
+                  else
+                    echo "❌ User not found in users.list"
+                  fi
+                else
+                  LIST_ERROR=$(echo "$USERS_LIST_RESPONSE" | jq -r '.error // unknown')
+                  echo "❌ users.list also failed: $LIST_ERROR"
+                fi
+              fi
+              
+              if [ "$USER_OK" != "true" ] || [ -z "$USER_ID" ] || [ "$USER_ID" = "null" ]; then
+                echo "❌ Failed to find Slack user with email: $SLACK_USER_EMAIL"
+                echo "Error: $USER_ERROR"
+                echo "Full response: $USER_RESPONSE"
+                echo ""
+                echo "💡 확인 사항:"
+                echo "1. 이메일 주소가 정확한지 확인하세요: $SLACK_USER_EMAIL"
+                echo "2. 해당 이메일로 Slack 워크스페이스에 가입되어 있는지 확인하세요"
+                echo "3. Bot에 'users:read.email' 및 'users:read' 권한이 있는지 확인하세요"
+                echo "4. Slack App 설정에서 'OAuth & Permissions' → 'Bot Token Scopes' 확인"
             else
               echo "✅ Found Slack user ID: $USER_ID"
               
