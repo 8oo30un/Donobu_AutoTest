@@ -415,28 +415,28 @@ jobs:
           echo "📨 Slack Notification Setup"
           echo "=========================================="
           echo "Checking environment variables..."
-          
+
           if [ -z "$SLACK_BOT_TOKEN" ]; then
             echo "❌ SLACK_BOT_TOKEN is not set"
           else
             echo "✅ SLACK_BOT_TOKEN is set (length: ${#SLACK_BOT_TOKEN} chars)"
             echo "   Token starts with: ${SLACK_BOT_TOKEN:0:10}..."
           fi
-          
+
           if [ -z "$SLACK_USER_EMAIL" ]; then
             echo "❌ SLACK_USER_EMAIL is not set"
           else
             echo "✅ SLACK_USER_EMAIL is set: $SLACK_USER_EMAIL"
           fi
-          
+
           if [ -z "$SLACK_WEBHOOK_URL" ]; then
             echo "⚠️ SLACK_WEBHOOK_URL is not set (will not use webhook fallback)"
           else
             echo "✅ SLACK_WEBHOOK_URL is set"
           fi
-          
+
           echo ""
-          
+
           # Use Bot Token for direct message (preferred) or fallback to webhook
           if [ -n "$SLACK_BOT_TOKEN" ] && [ -n "$SLACK_USER_EMAIL" ]; then
             echo "📨 Sending Slack DM using Bot Token..."
@@ -586,10 +586,15 @@ jobs:
             
             # Get user ID from email
             echo "🔍 Looking up Slack user by email: $SLACK_USER_EMAIL"
+            
+            # Create JSON payload using jq to ensure proper formatting
+            EMAIL_PAYLOAD=$(jq -n --arg email "$SLACK_USER_EMAIL" '{email: $email}')
+            echo "📤 Request payload: $EMAIL_PAYLOAD"
+            
             USER_RESPONSE=$(curl -s -X POST "https://slack.com/api/users.lookupByEmail" \
               -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "{\"email\":\"$SLACK_USER_EMAIL\"}")
+              -H "Content-Type: application/json; charset=utf-8" \
+              -d "$EMAIL_PAYLOAD")
             
             USER_OK=$(echo "$USER_RESPONSE" | jq -r '.ok // false')
             USER_ID=$(echo "$USER_RESPONSE" | jq -r '.user.id // empty')
@@ -608,10 +613,14 @@ jobs:
               
               # Open DM conversation (or use existing channel)
               echo "🔓 Opening DM conversation..."
+              
+              # Create JSON payload using jq
+              DM_PAYLOAD=$(jq -n --arg user_id "$USER_ID" '{users: $user_id}')
+              
               DM_RESPONSE=$(curl -s -X POST "https://slack.com/api/conversations.open" \
                 -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
-                -H "Content-Type: application/json" \
-                -d "{\"users\":\"$USER_ID\"}")
+                -H "Content-Type: application/json; charset=utf-8" \
+                -d "$DM_PAYLOAD")
               
               DM_OK=$(echo "$DM_RESPONSE" | jq -r '.ok // false')
               CHANNEL_ID=$(echo "$DM_RESPONSE" | jq -r '.channel.id // empty')
