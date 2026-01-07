@@ -737,13 +737,25 @@ jobs:
             echo "=========================================="
           elif [ -n "$SLACK_WEBHOOK_URL" ]; then
             # Fallback to webhook if Bot Token is not available
-            echo "📨 Sending Slack notification using Webhook (fallback)..."
+            echo "📨 Sending Slack notification using Webhook..."
+            echo "✅ Webhook URL is configured"
             
-            curl -X POST -H 'Content-type: application/json' \
+            WEBHOOK_RESPONSE=$(curl -s -X POST -H 'Content-type: application/json' \
               --data @"$SLACK_PAYLOAD_FILE" \
-              "$SLACK_WEBHOOK_URL" || echo "Failed to send Slack notification"
+              "$SLACK_WEBHOOK_URL")
+            
+            if [ $? -eq 0 ]; then
+              echo "✅ Successfully sent Slack notification via webhook"
+            else
+              echo "❌ Failed to send Slack notification via webhook"
+              echo "Response: $WEBHOOK_RESPONSE"
+            fi
             
             rm -f "$SLACK_PAYLOAD_FILE"
+            echo ""
+            echo "=========================================="
+            echo "✅ Slack notification step completed"
+            echo "=========================================="
           else
             echo ""
             echo "=========================================="
