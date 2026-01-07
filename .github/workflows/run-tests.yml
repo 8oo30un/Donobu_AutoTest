@@ -438,152 +438,154 @@ jobs:
 
           echo ""
 
-          # Use Bot Token for direct message (preferred) or fallback to webhook
-          if [ -n "$SLACK_BOT_TOKEN" ] && [ -n "$SLACK_USER_EMAIL" ]; then
-            echo "📨 Sending Slack DM using Bot Token..."
-            WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            WORKFLOW_RUN="${GITHUB_REPOSITORY} - Run #${GITHUB_RUN_NUMBER}"
-            
-            # Load totals if available
-            if [ -f "test-totals.env" ]; then
-              source test-totals.env
-            else
-              PASSED_TOTAL=0
-              FAILED_TOTAL=0
-              SKIPPED_TOTAL=0
-              DURATION=0
-            fi
-            
-            # Determine status emoji
-            if [ "$FAILED_TOTAL" -eq 0 ] && [ "$SKIPPED_TOTAL" -eq 0 ]; then
-              STATUS_EMOJI="✅"
-              STATUS_TEXT="All tests passed"
-            elif [ "$FAILED_TOTAL" -gt 0 ]; then
-              STATUS_EMOJI="❌"
-              STATUS_TEXT="$FAILED_TOTAL test(s) failed"
-            else
-              STATUS_EMOJI="⚠️"
-              STATUS_TEXT="$SKIPPED_TOTAL test(s) skipped"
-            fi
-            
-            # Build test results list from execution log
-            TEST_LIST_FILE=$(mktemp)
-            if [ -f "test-execution.log" ]; then
-              # Extract test file results
-              TEMP_RESULTS=$(mktemp)
-              grep -E "\[.*\] › tests/.*\.spec\.ts" test-execution.log | sed -E 's/.*› tests\/([^:]+\.spec\.ts).*/\1/' | sort -u | while read -r file; do
-                if grep -q "\[.*\] › tests/$file.*failed\|\[.*\] › tests/$file.*Error\|\[.*\] › tests/$file.*Timeout" test-execution.log; then
-                  echo "$file|❌" >> "$TEMP_RESULTS"
-                elif grep -q "\[.*\] › tests/$file.*skipped" test-execution.log; then
-                  echo "$file|⏭️" >> "$TEMP_RESULTS"
-                else
-                  echo "$file|✅" >> "$TEMP_RESULTS"
-                fi
-              done
-              
-              if [ -s "$TEMP_RESULTS" ]; then
-                sort -u "$TEMP_RESULTS" | head -20 | while IFS='|' read -r file status; do
-                  echo "• \`$file\` $status" >> "$TEST_LIST_FILE"
-                done
+          # Prepare common variables for both Bot Token and Webhook methods
+          WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          WORKFLOW_RUN="${GITHUB_REPOSITORY} - Run #${GITHUB_RUN_NUMBER}"
+          
+          # Load totals if available
+          if [ -f "test-totals.env" ]; then
+            source test-totals.env
+          else
+            PASSED_TOTAL=0
+            FAILED_TOTAL=0
+            SKIPPED_TOTAL=0
+            DURATION=0
+          fi
+          
+          # Determine status emoji
+          if [ "$FAILED_TOTAL" -eq 0 ] && [ "$SKIPPED_TOTAL" -eq 0 ]; then
+            STATUS_EMOJI="✅"
+            STATUS_TEXT="All tests passed"
+          elif [ "$FAILED_TOTAL" -gt 0 ]; then
+            STATUS_EMOJI="❌"
+            STATUS_TEXT="$FAILED_TOTAL test(s) failed"
+          else
+            STATUS_EMOJI="⚠️"
+            STATUS_TEXT="$SKIPPED_TOTAL test(s) skipped"
+          fi
+          
+          # Build test results list from execution log
+          TEST_LIST_FILE=$(mktemp)
+          if [ -f "test-execution.log" ]; then
+            # Extract test file results
+            TEMP_RESULTS=$(mktemp)
+            grep -E "\[.*\] › tests/.*\.spec\.ts" test-execution.log | sed -E 's/.*› tests\/([^:]+\.spec\.ts).*/\1/' | sort -u | while read -r file; do
+              if grep -q "\[.*\] › tests/$file.*failed\|\[.*\] › tests/$file.*Error\|\[.*\] › tests/$file.*Timeout" test-execution.log; then
+                echo "$file|❌" >> "$TEMP_RESULTS"
+              elif grep -q "\[.*\] › tests/$file.*skipped" test-execution.log; then
+                echo "$file|⏭️" >> "$TEMP_RESULTS"
+              else
+                echo "$file|✅" >> "$TEMP_RESULTS"
               fi
-              rm -f "$TEMP_RESULTS"
+            done
+            
+            if [ -s "$TEMP_RESULTS" ]; then
+              sort -u "$TEMP_RESULTS" | head -20 | while IFS='|' read -r file status; do
+                echo "• \`$file\` $status" >> "$TEST_LIST_FILE"
+              done
             fi
-            TEST_LIST=$(cat "$TEST_LIST_FILE" 2>/dev/null || echo "")
-            rm -f "$TEST_LIST_FILE"
-            
-            # Create Slack message payload using jq to avoid YAML parsing issues
-            SLACK_PAYLOAD_FILE=$(mktemp)
-            
-            # Build blocks array
-            jq -n \
-              --arg status_emoji "$STATUS_EMOJI" \
-              --arg repo "$GITHUB_REPOSITORY" \
-              --arg run_num "$GITHUB_RUN_NUMBER" \
-              --arg status_text "$STATUS_TEXT" \
-              --arg duration "$DURATION" \
-              --arg passed "$PASSED_TOTAL" \
-              --arg failed "$FAILED_TOTAL" \
-              --arg skipped "$SKIPPED_TOTAL" \
-              --arg workflow_url "$WORKFLOW_URL" \
-              --arg test_list "$TEST_LIST" \
-              '{
-                "blocks": [
-                  {
-                    "type": "header",
-                    "text": {
-                      "type": "plain_text",
-                      "text": ($status_emoji + " Playwright Test Results")
-                    }
-                  },
-                  {
-                    "type": "section",
-                    "fields": [
-                      {
-                        "type": "mrkdwn",
-                        "text": ("*Repository:*\n" + $repo)
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": ("*Run:*\n#" + $run_num)
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": ("*Status:*\n" + $status_text)
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": ("*Duration:*\n" + $duration + "m")
-                      }
-                    ]
-                  },
-                  {
-                    "type": "section",
-                    "fields": [
-                      {
-                        "type": "mrkdwn",
-                        "text": ("*Passed:*\n" + $passed + " ✅")
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": ("*Failed:*\n" + $failed + " ❌")
-                      },
-                      {
-                        "type": "mrkdwn",
-                        "text": ("*Skipped:*\n" + $skipped + " ⏭️")
-                      }
-                    ]
-                  }
-                ]
-              }' > "$SLACK_PAYLOAD_FILE"
-            
-            # Add test results list if available
-            if [ -n "$TEST_LIST" ]; then
-              TEST_LIST_ESCAPED=$(echo "$TEST_LIST" | jq -Rs . | sed 's/^"//;s/"$//')
-              jq --arg test_list_text "$TEST_LIST" \
-                '.blocks += [{
-                  "type": "section",
+            rm -f "$TEMP_RESULTS"
+          fi
+          TEST_LIST=$(cat "$TEST_LIST_FILE" 2>/dev/null || echo "")
+          rm -f "$TEST_LIST_FILE"
+          
+          # Create Slack message payload using jq
+          SLACK_PAYLOAD_FILE=$(mktemp)
+          
+          # Build blocks array
+          jq -n \
+            --arg status_emoji "$STATUS_EMOJI" \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg run_num "$GITHUB_RUN_NUMBER" \
+            --arg status_text "$STATUS_TEXT" \
+            --arg duration "$DURATION" \
+            --arg passed "$PASSED_TOTAL" \
+            --arg failed "$FAILED_TOTAL" \
+            --arg skipped "$SKIPPED_TOTAL" \
+            --arg workflow_url "$WORKFLOW_URL" \
+            --arg test_list "$TEST_LIST" \
+            '{
+              "blocks": [
+                {
+                  "type": "header",
                   "text": {
-                    "type": "mrkdwn",
-                    "text": ("*Test Results:*\n" + $test_list_text)
+                    "type": "plain_text",
+                    "text": ($status_emoji + " Playwright Test Results")
                   }
-                }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
-            fi
-            
-            # Add view details button
-            jq --arg workflow_url "$WORKFLOW_URL" \
-              '.blocks += [{
-                "type": "actions",
-                "elements": [
-                  {
-                    "type": "button",
-                    "text": {
-                      "type": "plain_text",
-                      "text": "View Details"
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Repository:*\n" + $repo)
                     },
-                    "url": $workflow_url
-                  }
-                ]
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Run:*\n#" + $run_num)
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Status:*\n" + $status_text)
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Duration:*\n" + $duration + "m")
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Passed:*\n" + $passed + " ✅")
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Failed:*\n" + $failed + " ❌")
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": ("*Skipped:*\n" + $skipped + " ⏭️")
+                    }
+                  ]
+                }
+              ]
+            }' > "$SLACK_PAYLOAD_FILE"
+          
+          # Add test results list if available
+          if [ -n "$TEST_LIST" ]; then
+            TEST_LIST_ESCAPED=$(echo "$TEST_LIST" | jq -Rs . | sed 's/^"//;s/"$//')
+            jq --arg test_list_text "$TEST_LIST" \
+              '.blocks += [{
+                "type": "section",
+                "text": {
+                  "type": "mrkdwn",
+                  "text": ("*Test Results:*\n" + $test_list_text)
+                }
               }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
+          fi
+          
+          # Add view details button
+          jq --arg workflow_url "$WORKFLOW_URL" \
+            '.blocks += [{
+              "type": "actions",
+              "elements": [
+                {
+                  "type": "button",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "View Details"
+                  },
+                  "url": $workflow_url
+                }
+              ]
+            }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
+          
+          # Use Bot Token for direct message (preferred) or fallback to webhook
+          if [ -n "$SLACK_BOT_TOKEN" ] && ([ -n "$SLACK_USER_ID" ] || [ -n "$SLACK_USER_EMAIL" ]); then
+            echo "📨 Sending Slack DM using Bot Token..."
             
             # First, verify the Bot Token works by checking auth.test
             echo "🔍 Verifying Bot Token..."
