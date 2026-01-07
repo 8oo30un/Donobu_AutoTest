@@ -409,6 +409,7 @@ jobs:
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_USER_EMAIL: ${{ secrets.SLACK_USER_EMAIL || vars.slack_user_email || vars.SLACK_USER_EMAIL }}
+          SLACK_USER_ID: ${{ secrets.SLACK_USER_ID || vars.slack_user_id || vars.SLACK_USER_ID }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           echo "=========================================="
@@ -655,8 +656,16 @@ jobs:
                 echo "2. 해당 이메일로 Slack 워크스페이스에 가입되어 있는지 확인하세요"
                 echo "3. Bot에 'users:read.email' 및 'users:read' 권한이 있는지 확인하세요"
                 echo "4. Slack App 설정에서 'OAuth & Permissions' → 'Bot Token Scopes' 확인"
-            else
-              echo "✅ Found Slack user ID: $USER_ID"
+                echo ""
+                echo "💡 대안: SLACK_USER_ID를 직접 설정하세요"
+                echo "   Slack에서 사용자 프로필을 열고 URL에서 사용자 ID를 복사하세요"
+                echo "   예: https://workspace.slack.com/team/U1234567890 → U1234567890"
+              fi
+            fi
+            
+            # If we have a valid user ID, proceed with sending DM
+            if [ "$USER_OK" = "true" ] && [ -n "$USER_ID" ] && [ "$USER_ID" != "null" ]; then
+              echo "✅ Using Slack user ID: $USER_ID"
               
               # Open DM conversation (or use existing channel)
               echo "🔓 Opening DM conversation..."
