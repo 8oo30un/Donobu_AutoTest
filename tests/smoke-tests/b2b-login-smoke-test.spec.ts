@@ -23,11 +23,22 @@ test(title, details, async ({ page }) => {
   await page.goto('https://dev-dashboard.immerse.online/login');
   // Asserting that the user is met with a login page by checking for the text 'Log In'.
   await expect(page.getByText('Log In')).toBeVisible();
+  // Wait for page to fully load before attempting to find language selector
+  await page.waitForTimeout(2000);
+  // Try to wait for language selector to be visible
+  try {
+    await page.waitForSelector("[aria-label='Display Language'], div:has-text('ENGLISH'), [role='searchbox'][aria-label='Display Language']", { timeout: 5000 });
+  } catch (e) {
+    // Language selector might not be visible, continue anyway
+  }
   // Clicking on the display language dropdown to change the language on the login page.
   await page
     .find("[aria-label='Display Language']", {
       failover: [
+        "[role='searchbox'][aria-label='Display Language']",
+        "input[aria-label='Display Language']",
         "(.//div[normalize-space(.)='ENGLISH'])[1]",
+        ".//div[contains(text(), 'ENGLISH')]",
         'div.css-18wbxrz',
         'div.css-1a47ai3 > div:nth-of-type(2)',
         'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(2)',
@@ -36,6 +47,8 @@ test(title, details, async ({ page }) => {
         'html > body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
         'body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
         ".//div[normalize-space(.)='ENGLISH']",
+        "//div[contains(@class, 'Select')]",
+        "//div[contains(@class, 'language')]",
       ],
     })
     .click();
