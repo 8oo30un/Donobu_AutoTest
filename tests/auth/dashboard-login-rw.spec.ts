@@ -24,12 +24,9 @@ test(title, details, async ({ page }) => {
   }
   
   // Entering the email address as specified in the objective to log in to the b2b dashboard.
-  await page.inputText({
-    text: email,
-    finalizeWithSubmit: false,
-    selector: {
-      element: [
-        '#__next > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(1) > input',
+  await page
+    .find("[data-testid='login-form-email-input']", {
+      failover: [
         "[placeholder='Email']",
         'div:nth-of-type(1) > input.c-gtNREi',
         'div.c-jhyvPY > div:nth-of-type(2) > div:nth-of-type(1) > input',
@@ -38,16 +35,12 @@ test(title, details, async ({ page }) => {
         'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(1) > input',
         'input.c-gtNREi',
       ],
-      frame: null,
-    },
-  });
+    })
+    .inputText(email);
   // Entering the password as specified in the objective to complete the login credentials for the b2b dashboard.
-  await page.inputText({
-    text: password,
-    finalizeWithSubmit: false,
-    selector: {
-      element: [
-        '#__next > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > input',
+  await page
+    .find("[data-testid='login-form-password-input']", {
+      failover: [
         "[placeholder='Password']",
         'div:nth-of-type(2) > input.c-gtNREi',
         'div.c-jhyvPY > div:nth-of-type(2) > div:nth-of-type(2) > input',
@@ -56,14 +49,12 @@ test(title, details, async ({ page }) => {
         'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > input',
         'input.c-gtNREi',
       ],
-      frame: null,
-    },
-  });
+    })
+    .inputText(password);
   // Clicking the Login button to submit the credentials and proceed to the dashboard as specified in the objective.
-  await page.clickElement({
-    selector: {
-      element: [
-        '#__next > div:nth-of-type(1) > div > div > button',
+  await page
+    .find("[data-testid='login-form-submit-button']", {
+      failover: [
         ".//button[normalize-space(.)='Login']",
         'button.c-gNnAWR',
         'div.c-jhyvPY > button',
@@ -71,9 +62,8 @@ test(title, details, async ({ page }) => {
         'div.c-ejwOqd > div > div > button',
         'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > button',
       ],
-      frame: null,
-    },
-  });
+    })
+    .click();
   // Waiting for the login process to complete and the page to redirect to the dashboard after clicking the Login button.
   await page.waitForTimeout(3000);
   // Verifying that the user has successfully landed on the Dashboard home page by checking for the presence of "Learning Summary" text as specified in the objective.
