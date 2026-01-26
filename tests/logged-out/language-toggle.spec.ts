@@ -38,24 +38,36 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
-  // Wait for dropdown to open
+  // Wait for dropdown to open and menu items to be visible
   await page.waitForTimeout(1000);
+  // Try to wait for menu to be visible
+  try {
+    await page.waitForSelector("[role='menuitem'], [data-menu-item='true'], button.mantine-Menu-item", { timeout: 3000 });
+  } catch (e) {
+    // Menu might already be visible, continue
+  }
   // Selecting Japanese from the language options to change the display language.
   await page
     .find(".//button[normalize-space(.)='日本語']", {
       failover: [
+        "//div[normalize-space(.)='Japanese']",
+        "//div[contains(text(), 'Japanese')]",
         ".//button[contains(text(), '日本語')]",
         ".//button[contains(text(), 'Japanese')]",
+        "//button[normalize-space(.)='Japanese']",
         'div.css-1a47ai3 > div:nth-of-type(3) > div > button:nth-of-type(2)',
         'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(2)',
         'div.c-gqwkJN > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(2)',
         'div.c-ejwOqd > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(2)',
         'body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(2)',
+        "[role='menuitem']:has-text('Japanese')",
+        "[role='menuitem']:has-text('日本語')",
+        "[data-menu-item='true']:has-text('Japanese')",
+        'button.mantine-Menu-item:has-text("Japanese")',
+        'button.mantine-Menu-item:has-text("日本語")',
         "[role='menuitem']",
         "[data-menu-item='true']",
         'button.mantine-Menu-item',
-        'button:has-text("日本語")',
-        'button:has-text("Japanese")',
       ],
     })
     .click();

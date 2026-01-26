@@ -320,11 +320,25 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
+  // Wait for menu to open
+  await page.waitForTimeout(1000);
+  // Try to wait for menu items to be visible
+  try {
+    await page.waitForSelector("[role='menuitem'], [data-menu-item='true'], button.mantine-Menu-item", { timeout: 3000 });
+  } catch (e) {
+    // Menu might already be visible, continue
+  }
   // Clicking on "View Registration Link" to obtain the registration link for the newly added learner.
   await page
     .find("[data-testid='learners-edit-menu-item-view-registration-link']", {
       failover: [
         ".//button[normalize-space(.)='View Registration Link']",
+        ".//button[contains(text(), 'View Registration Link')]",
+        ".//button[contains(text(), 'Registration Link')]",
+        "//button[normalize-space(.)='View Registration Link']",
+        "[role='menuitem']:has-text('View Registration Link')",
+        "[data-menu-item='true']:has-text('View Registration Link')",
+        "button.mantine-Menu-item:has-text('View Registration Link')",
         "[data-testid='learners-table-cell-edit-235514'] > div > div > button:nth-of-type(1)",
         'div.mantine-kwn0a8 > table > tbody > tr > td:nth-of-type(14) > div > div > button:nth-of-type(1)',
         "[data-testid='learners-table-row-235514'] > td:nth-of-type(14) > div > div > button:nth-of-type(1)",
