@@ -23,6 +23,86 @@ test(title, details, async ({ page }) => {
   await page.goto('https://dev-dashboard.immerse.online/login');
   // Asserting that the user is met with a login page by checking for the text 'Log In'.
   await expect(page.getByText('Log In')).toBeVisible();
+  // Clicking on the display language dropdown to change the language on the login page.
+  await page
+    .find("[aria-label='Display Language']", {
+      failover: [
+        "(.//div[normalize-space(.)='ENGLISH'])[1]",
+        'div.css-18wbxrz',
+        'div.css-1a47ai3 > div:nth-of-type(2)',
+        'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(2)',
+        'div.c-gqwkJN > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        'div.c-ejwOqd > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        'html > body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        'body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        ".//div[normalize-space(.)='ENGLISH']",
+      ],
+    })
+    .click();
+  // Wait for dropdown to open
+  await page.waitForTimeout(1000);
+  // Try to wait for menu items to be visible
+  try {
+    await page.waitForSelector("[role='menuitem'], [data-menu-item='true'], button.mantine-Menu-item", { timeout: 3000 });
+  } catch (e) {
+    // Menu might already be visible, continue
+  }
+  // Changing the display language to Spanish.
+  await page
+    .find(".//button[normalize-space(.)='Español']", {
+      failover: [
+        'div.css-1a47ai3 > div:nth-of-type(3) > div > button:nth-of-type(3)',
+        'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(3)',
+        'div.c-gqwkJN > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(3)',
+        'div.c-ejwOqd > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(3)',
+        'body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(3)',
+        "[role='menuitem']",
+        "[data-menu-item='true']",
+        'button.mantine-Menu-item',
+      ],
+    })
+    .click();
+  // Asserting that the display language has been changed to Spanish by checking for the presence of 'ESPAÑOL' text in the language dropdown.
+  await expect(page.getByText('ESPAÑOL')).toBeVisible();
+  // Clicking on the display language dropdown to change the language back to English.
+  await page
+    .find("[aria-label='Idioma de visualización']", {
+      failover: [
+        "(.//div[normalize-space(.)='ESPAÑOL'])[1]",
+        'div.css-18wbxrz',
+        'div.css-1a47ai3 > div:nth-of-type(2)',
+        'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(2)',
+        'div.c-gqwkJN > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        'div.c-ejwOqd > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        'html > body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        'body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
+        ".//div[normalize-space(.)='ESPAÑOL']",
+      ],
+    })
+    .click();
+  // Wait for dropdown to open
+  await page.waitForTimeout(1000);
+  // Try to wait for menu items to be visible
+  try {
+    await page.waitForSelector("[role='menuitem'], [data-menu-item='true'], button.mantine-Menu-item", { timeout: 3000 });
+  } catch (e) {
+    // Menu might already be visible, continue
+  }
+  // Changing the display language back to English.
+  await page
+    .find(".//button[normalize-space(.)='English']", {
+      failover: [
+        'div.css-1a47ai3 > div:nth-of-type(3) > div > button:nth-of-type(1)',
+        'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)',
+        'div.c-gqwkJN > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)',
+        'div.c-ejwOqd > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)',
+        'body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)',
+        "[role='menuitem']",
+        "[data-menu-item='true']",
+        'button.mantine-Menu-item',
+      ],
+    })
+    .click();
   // Clicking on the 'Forgot password' link to navigate to the Forgot Password page.
   await page
     .find("[data-testid='login-form-forgot-password-link']", {
@@ -39,64 +119,6 @@ test(title, details, async ({ page }) => {
     .click();
   // Asserting that the user is on the Forgot Password page by checking for the text 'Forgot Password?'.
   await expect(page.getByText('Forgot Password?')).toBeVisible();
-  // Clicking on the display language dropdown to change the language.
-  await page
-    .find("[aria-label='Display Language']", {
-      failover: [
-        "(.//div[normalize-space(.)='ENGLISH'])[1]",
-        'div.css-18wbxrz',
-        'div.css-1a47ai3 > div:nth-of-type(2)',
-        'div.c-ejwOqd > div:nth-of-type(1) > div:nth-of-type(2)',
-        'html > body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        'body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        ".//div[normalize-space(.)='ENGLISH']",
-      ],
-    })
-    .click();
-  // Changing the display language to Spanish.
-  await page
-    .find(".//button[normalize-space(.)='Español']", {
-      failover: [
-        'div.css-1a47ai3 > div:nth-of-type(3) > div > button:nth-of-type(3)',
-        'div.c-ejwOqd > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(3)',
-        'html > body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(3)',
-        'body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(3)',
-        "[role='menuitem']",
-        "[data-menu-item='true']",
-        'button.mantine-Menu-item',
-      ],
-    })
-    .click();
-  // Asserting that the display language has been changed to Spanish by checking for the presence of 'ESPAÑOL' text in the language dropdown.
-  await expect(page.getByText('ESPAÑOL')).toBeVisible();
-  // Clicking on the display language dropdown to change the language back to English.
-  await page
-    .find("[aria-label='Idioma de visualización']", {
-      failover: [
-        "(.//div[normalize-space(.)='ESPAÑOL'])[1]",
-        'div.css-18wbxrz',
-        'div.css-1a47ai3 > div:nth-of-type(2)',
-        'div.c-ejwOqd > div:nth-of-type(1) > div:nth-of-type(2)',
-        'html > body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        'body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        ".//div[normalize-space(.)='ESPAÑOL']",
-      ],
-    })
-    .click();
-  // Changing the display language back to English.
-  await page
-    .find(".//button[normalize-space(.)='English']", {
-      failover: [
-        'div.css-1a47ai3 > div:nth-of-type(3) > div > button:nth-of-type(1)',
-        'div.c-ejwOqd > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)',
-        'html > body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)',
-        'body > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)',
-        "[role='menuitem']",
-        "[data-menu-item='true']",
-        'button.mantine-Menu-item',
-      ],
-    })
-    .click();
   // Navigating back to the login page to proceed with the login process.
   await page.goBack();
   const email = process.env.EMAIL;
