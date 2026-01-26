@@ -114,6 +114,73 @@ jobs:
           fi
           echo "=========================================="
           echo ""
+          # Analyze test results to show skipped tests
+          echo "📊 Analyzing test results..."
+          if [ -f "test-results/playwright-report.json" ]; then
+            echo ""
+            echo "=== TEST SUMMARY ==="
+            # Try different JSON structures
+            if jq -e '.stats' test-results/playwright-report.json >/dev/null 2>&1; then
+              # Standard Playwright JSON format
+              TOTAL=$(jq '.stats.total' test-results/playwright-report.json 2>/dev/null || echo "0")
+              PASSED=$(jq '.stats.expected' test-results/playwright-report.json 2>/dev/null || echo "0")
+              FAILED=$(jq '.stats.unexpected' test-results/playwright-report.json 2>/dev/null || echo "0")
+              SKIPPED=$(jq '.stats.skipped' test-results/playwright-report.json 2>/dev/null || echo "0")
+            elif jq -e '.suites' test-results/playwright-report.json >/dev/null 2>&1; then
+              # Alternative format
+              TOTAL=$(jq '[.suites[].specs[]?.tests[]?] | length' test-results/playwright-report.json 2>/dev/null || echo "0")
+              PASSED=$(jq '[.suites[].specs[]?.tests[]? | select(.results[0].status == "passed")] | length' test-results/playwright-report.json 2>/dev/null || echo "0")
+              FAILED=$(jq '[.suites[].specs[]?.tests[]? | select(.results[0].status == "failed")] | length' test-results/playwright-report.json 2>/dev/null || echo "0")
+              SKIPPED=$(jq '[.suites[].specs[]?.tests[]? | select(.results[0].status == "skipped")] | length' test-results/playwright-report.json 2>/dev/null || echo "0")
+            else
+              # Try to extract from test execution log
+              TOTAL=$(grep -c "Running.*tests" test-execution.log 2>/dev/null || echo "0")
+              PASSED=$(grep -c "✅\|passed" test-execution.log 2>/dev/null || echo "0")
+              FAILED=$(grep -c "❌\|failed" test-execution.log 2>/dev/null || echo "0")
+              SKIPPED=$(grep -c "⏭️\|skipped" test-execution.log 2>/dev/null || echo "0")
+            fi
+            echo "Total tests: $TOTAL"
+            echo "✅ Passed: $PASSED"
+            echo "❌ Failed: $FAILED"
+            echo "⏭️  Skipped: $SKIPPED"
+            echo ""
+            if [ "$SKIPPED" != "0" ] && [ "$SKIPPED" != "" ] && [ "$SKIPPED" != "null" ]; then
+              echo "=== SKIPPED TESTS (likely due to failed dependencies) ==="
+              # Try to extract skipped tests from JSON
+              if jq -e '.suites' test-results/playwright-report.json >/dev/null 2>&1; then
+                jq -r '.suites[].specs[]?.tests[]? | select(.results[0].status == "skipped") | "  - \(.title) [\(.file)]"' test-results/playwright-report.json 2>/dev/null | head -30 || echo "Could not parse skipped tests from JSON"
+              else
+                echo "  Check test-execution.log above for skipped tests"
+                grep -i "skipped\|skip" test-execution.log 2>/dev/null | head -20 || echo "No skipped test info found in log"
+              fi
+              echo ""
+              echo "💡 Tip: Skipped tests are usually due to failed dependencies (e.g., login tests)"
+              echo "   Check the failed login tests above to understand why dependent tests were skipped"
+              echo "   Common causes:"
+              echo "   - dashboard-login failed → logged-in-tests skipped"
+              echo "   - d2c-login failed → d2c-logged-in-tests skipped"
+              echo "   - b2b-smoke-test-login failed → logged-in-smoke-tests skipped"
+            fi
+            if [ "$FAILED" != "0" ] && [ "$FAILED" != "" ] && [ "$FAILED" != "null" ]; then
+              echo "=== FAILED TESTS ==="
+              if jq -e '.suites' test-results/playwright-report.json >/dev/null 2>&1; then
+                jq -r '.suites[].specs[]?.tests[]? | select(.results[0].status == "failed") | "  - \(.title) [\(.file)]"' test-results/playwright-report.json 2>/dev/null | head -30 || echo "Could not parse failed tests from JSON"
+              else
+                echo "  Check test-execution.log above for failed tests"
+                grep -i "failed\|✘" test-execution.log 2>/dev/null | head -20 || echo "No failed test info found in log"
+              fi
+              echo ""
+            fi
+          else
+            echo "⚠️  Could not analyze test results: test-results/playwright-report.json not found"
+            echo "   Checking test-execution.log for test results..."
+            if [ -f "test-execution.log" ]; then
+              echo ""
+              echo "=== Test execution summary from log ==="
+              grep -E "passed|failed|skipped|Running.*tests" test-execution.log | tail -20 || echo "No summary found in log"
+            fi
+          fi
+          echo ""
 
           # Wait a moment for reporters to finish writing files
           sleep 2
@@ -207,7 +274,7 @@ jobs:
             echo "Tests may not have run at all."
             exit 1
           fi
-          
+
           # Check if any tests were executed
           if ! grep -q "Running\|passed\|failed\|skipped" test-execution.log; then
             echo "❌ ERROR: No test execution found in log!"
@@ -216,13 +283,13 @@ jobs:
             tail -50 test-execution.log
             exit 1
           fi
-          
+
           # Exit with test exit code but continue-on-error will prevent job failure
           # This allows us to upload artifacts even if tests fail
           if [ $TEST_EXIT_CODE -ne 0 ]; then
             echo "⚠️ Tests failed but continuing to upload artifacts..."
           fi
-          
+
           # Don't exit 0 - let the actual exit code propagate
           exit $TEST_EXIT_CODE
 
@@ -480,7 +547,7 @@ jobs:
           # Prepare common variables for both Bot Token and Webhook methods
           WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           WORKFLOW_RUN="${GITHUB_REPOSITORY} - Run #${GITHUB_RUN_NUMBER}"
-          
+
           # Load totals if available
           if [ -f "test-totals.env" ]; then
             source test-totals.env
@@ -490,7 +557,7 @@ jobs:
             SKIPPED_TOTAL=0
             DURATION=0
           fi
-          
+
           # Determine status emoji
           if [ "$FAILED_TOTAL" -eq 0 ] && [ "$SKIPPED_TOTAL" -eq 0 ]; then
             STATUS_EMOJI="✅"
@@ -502,7 +569,7 @@ jobs:
             STATUS_EMOJI="⚠️"
             STATUS_TEXT="$SKIPPED_TOTAL test(s) skipped"
           fi
-          
+
           # Build test results list from execution log
           TEST_LIST_FILE=$(mktemp)
           if [ -f "test-execution.log" ]; then
@@ -527,10 +594,10 @@ jobs:
           fi
           TEST_LIST=$(cat "$TEST_LIST_FILE" 2>/dev/null || echo "")
           rm -f "$TEST_LIST_FILE"
-          
+
           # Create Slack message payload using jq
           SLACK_PAYLOAD_FILE=$(mktemp)
-          
+
           # Build blocks array
           jq -n \
             --arg status_emoji "$STATUS_EMOJI" \
@@ -592,7 +659,7 @@ jobs:
                 }
               ]
             }' > "$SLACK_PAYLOAD_FILE"
-          
+
           # Add test results list if available
           if [ -n "$TEST_LIST" ]; then
             TEST_LIST_ESCAPED=$(echo "$TEST_LIST" | jq -Rs . | sed 's/^"//;s/"$//')
@@ -605,7 +672,7 @@ jobs:
                 }
               }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
           fi
-          
+
           # Add view details button
           jq --arg workflow_url "$WORKFLOW_URL" \
             '.blocks += [{
@@ -621,7 +688,7 @@ jobs:
                 }
               ]
             }]' "$SLACK_PAYLOAD_FILE" > "${SLACK_PAYLOAD_FILE}.tmp" && mv "${SLACK_PAYLOAD_FILE}.tmp" "$SLACK_PAYLOAD_FILE"
-          
+
           # Use Bot Token for direct message (preferred) or fallback to webhook
           if [ -n "$SLACK_BOT_TOKEN" ] && ([ -n "$SLACK_USER_ID" ] || [ -n "$SLACK_USER_EMAIL" ]); then
             echo "📨 Sending Slack DM using Bot Token..."
