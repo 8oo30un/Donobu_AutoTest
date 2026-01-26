@@ -29,7 +29,7 @@ Assert that the TOS column is sorted in descending order`,
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto('https://staging-dashboard.immerse.online/dashboard');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard');
   // Waiting for the page to load completely before attempting to interact with elements.
   await page.waitForTimeout(5000);
   // Clicking on the Learners tab to navigate to the learners' data.

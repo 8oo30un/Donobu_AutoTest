@@ -8,8 +8,8 @@ const details = {
       description: `Log in with d2c account and save authentication state:
 
 Navigate to app.immerse.online
-Enter the email of a d2c user: test_stripe_v3_user@immerse.online
-Enter the password for that d2c user: 49i4EjT&gK53pB!M
+Enter the email of a d2c user: {{$.env.D2C_EMAIL}}
+Enter the password for that d2c user: {{$.env.D2C_PASSWORD}}
 Click on Login
 Verify landing at the home page for d2c learners (https://app.immerse.online/home)
 `,
@@ -21,6 +21,15 @@ test(title, details, async ({ page, context }) => {
   await page.goto('https://app.immerse.online/login');
   await page.getByRole('heading', { name: 'Log In' }).waitFor({ state: 'visible', timeout: 90000 });
   await page.waitForTimeout(10000);
+
+  const d2cEmail = process.env.D2C_EMAIL;
+  const d2cPassword = process.env.D2C_PASSWORD;
+  
+  if (!d2cEmail || !d2cPassword) {
+    throw new Error(
+      "D2C_EMAIL and D2C_PASSWORD environment variables must be set"
+    );
+  }
 
   // Entering the d2c user's email address into the email input field to log in.
   await page
@@ -34,7 +43,7 @@ test(title, details, async ({ page, context }) => {
         'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > div > input',
       ],
     })
-    .inputText('test_stripe_v3_user@immerse.online');
+    .inputText(d2cEmail);
 
   // Entering the d2c user's password into the password input field to complete the login credentials.
   await page
@@ -51,7 +60,7 @@ test(title, details, async ({ page, context }) => {
         'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > div > div:nth-of-type(1) > input',
       ],
     })
-    .inputText('49i4EjT&gK53pB!M');
+    .inputText(d2cPassword);
 
   // Clicking the Login button to complete the login process after entering the email and password.
   await page

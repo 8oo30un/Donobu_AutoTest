@@ -15,10 +15,17 @@ Verify user lands on Dashboard home page by asserting the words "Learning Summar
 };
 test(title, details, async ({ page }) => {
   // Navigate to the URL and wait for the network to become idle.
-  await page.goto('https://staging-dashboard.immerse.online', { waitUntil: 'networkidle' });
+  await page.goto('https://dev-dashboard.immerse.online', { waitUntil: 'networkidle' });
+  const email = process.env.EMAIL;
+  const password = process.env.PASSWORD;
+  
+  if (!email || !password) {
+    throw new Error("EMAIL and PASSWORD environment variables must be set");
+  }
+  
   // Entering the email address as specified in the objective to log in to the b2b dashboard.
   await page.inputText({
-    text: 'sample.hradmin.readonly.6@immerse.online',
+    text: email,
     finalizeWithSubmit: false,
     selector: {
       element: [
@@ -36,7 +43,7 @@ test(title, details, async ({ page }) => {
   });
   // Entering the password as specified in the objective to complete the login credentials for the b2b dashboard.
   await page.inputText({
-    text: '6hradminreadonly',
+    text: password,
     finalizeWithSubmit: false,
     selector: {
       element: [

@@ -24,7 +24,7 @@ Assert that Number of Learners, Logged in at Least Once, and % Attended Trainer-
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto('https://staging-dashboard.immerse.online/dashboard');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard');
   // Waiting for the dashboard page to fully load as it appears to be showing a loading spinner.
   await page.waitForTimeout(3000);
   // Clicking on the Time Frame dropdown to change it from "Last 30 days" to "All Time" as required by the objective.

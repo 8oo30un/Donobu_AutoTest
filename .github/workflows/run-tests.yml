@@ -41,6 +41,18 @@ jobs:
           else
             echo "✅ PASSWORD is set"
           fi
+          if [ -z "${{ vars.D2C_EMAIL }}" ]; then
+            echo "⚠️ WARNING: D2C_EMAIL variable is not set!"
+            echo "D2C login tests will be skipped"
+          else
+            echo "✅ D2C_EMAIL is set"
+          fi
+          if [ -z "${{ secrets.D2C_PASSWORD }}" ]; then
+            echo "⚠️ WARNING: D2C_PASSWORD secret is not set!"
+            echo "D2C login tests will be skipped"
+          else
+            echo "✅ D2C_PASSWORD is set"
+          fi
 
       - name: Run Playwright tests
         id: run_tests
@@ -51,6 +63,8 @@ jobs:
           GOOGLE_GENERATIVE_AI_MODEL_NAME: gemini-2.5-flash
           EMAIL: ${{ vars.EMAIL }}
           PASSWORD: ${{ secrets.PASSWORD }}
+          D2C_EMAIL: ${{ vars.D2C_EMAIL || '' }}
+          D2C_PASSWORD: ${{ secrets.D2C_PASSWORD || '' }}
           # CI 환경에서는 self-healing 비활성화하여 API 호출 최소화
           SELF_HEAL_TESTS_ENABLED: false
         run: |
@@ -80,7 +94,14 @@ jobs:
           # Run tests (reporter is already configured in playwright.config.ts)
           # Don't override reporter settings to avoid conflicts
           set +e  # Don't exit on error
-          xvfb-run npx playwright test --reporter=list 2>&1 | tee test-execution.log
+          echo "Checking Playwright installation..."
+          npx playwright --version || echo "Playwright not found"
+          echo ""
+          echo "Listing available tests..."
+          npx playwright test --list 2>&1 | head -30 || echo "Failed to list tests"
+          echo ""
+          echo "Running tests..."
+          xvfb-run npx playwright test --reporter=list --reporter=json --reporter=html 2>&1 | tee test-execution.log
           TEST_EXIT_CODE=$?
           set -e  # Re-enable exit on error
 
@@ -180,12 +201,30 @@ jobs:
           echo "- Failed tests will show error details"
           echo "- Skipped tests may be due to dependencies or testIgnore configuration"
 
+          # Check if tests actually ran
+          if [ ! -f "test-execution.log" ] || [ ! -s "test-execution.log" ]; then
+            echo "❌ ERROR: Test execution log is empty or missing!"
+            echo "Tests may not have run at all."
+            exit 1
+          fi
+          
+          # Check if any tests were executed
+          if ! grep -q "Running\|passed\|failed\|skipped" test-execution.log; then
+            echo "❌ ERROR: No test execution found in log!"
+            echo "Test execution may have failed before tests could run."
+            echo "Last 50 lines of log:"
+            tail -50 test-execution.log
+            exit 1
+          fi
+          
           # Exit with test exit code but continue-on-error will prevent job failure
           # This allows us to upload artifacts even if tests fail
           if [ $TEST_EXIT_CODE -ne 0 ]; then
             echo "⚠️ Tests failed but continuing to upload artifacts..."
           fi
-          exit 0
+          
+          # Don't exit 0 - let the actual exit code propagate
+          exit $TEST_EXIT_CODE
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4

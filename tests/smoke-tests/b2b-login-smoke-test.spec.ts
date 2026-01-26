@@ -13,14 +13,14 @@ I can change my display language and change it back to English
 I can login with a user that is set up to access the dashboard.
 I land on Dashboard home page and the words "Learning Summary" are displayed on the page
 
-username: sample.hradmin.readonly.6@immerse.online
-password: 6hradminreadonly`,
+username: {{$.env.EMAIL}}
+password: {{$.env.PASSWORD}}`,
     },
   ],
 };
 test(title, details, async ({ page }) => {
   // Navigating to the login page to begin the assertion process.
-  await page.goto('https://staging-dashboard.immerse.online/login');
+  await page.goto('https://dev-dashboard.immerse.online/login');
   // Asserting that the user is met with a login page by checking for the text 'Log In'.
   await expect(page.getByText('Log In')).toBeVisible();
   // Clicking on the 'Forgot password' link to navigate to the Forgot Password page.
@@ -99,6 +99,13 @@ test(title, details, async ({ page }) => {
     .click();
   // Navigating back to the login page to proceed with the login process.
   await page.goBack();
+  const email = process.env.EMAIL;
+  const password = process.env.PASSWORD;
+  
+  if (!email || !password) {
+    throw new Error("EMAIL and PASSWORD environment variables must be set");
+  }
+  
   // Entering the username into the email field for login.
   await page
     .find("[data-testid='login-form-email-input']", {
@@ -112,7 +119,7 @@ test(title, details, async ({ page }) => {
         'input.c-gtNREi',
       ],
     })
-    .inputText('sample.hradmin.readonly.6@immerse.online');
+    .inputText(email);
   // Entering the password into the password field for login.
   await page
     .find("[data-testid='login-form-password-input']", {
@@ -126,7 +133,7 @@ test(title, details, async ({ page }) => {
         'input.c-gtNREi',
       ],
     })
-    .inputText('6hradminreadonly');
+    .inputText(password);
   // Clicking the login button to log in with the provided credentials.
   await page
     .find("[data-testid='login-form-submit-button']", {

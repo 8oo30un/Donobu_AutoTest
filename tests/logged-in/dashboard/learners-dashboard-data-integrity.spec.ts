@@ -17,8 +17,8 @@ const details = {
       type: 'objective',
       description: `Log in and verify data integrity of TOS and Activities Completed
 
-- Enter Email: sample.hradmin.readonly.6@immerse.online
-- Enter Password: 6hradminreadonly
+- Enter Email: {{$.env.EMAIL}}
+- Enter Password: {{$.env.PASSWORD}}
 Click on Learners Tab
 Change Timeframe to "All Time"
 Wait for Learners to load
@@ -54,7 +54,7 @@ Generate report with pass/fail counts and any discrepancies found in order check
 };
 test(title, details, async ({ page }) => {
   // Navigate to the login page
-  await page.goto('https://staging-dashboard.immerse.online/dashboard');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard');
   // Wait for page to load
   await page.waitForLoadState('networkidle');
   // Clicking on the 'Learners' tab to navigate to the learners' data page.

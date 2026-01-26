@@ -21,7 +21,7 @@ const details = {
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto('https://staging-dashboard.immerse.online/dashboard');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard');
   // Verifying that the 'Number of Learners' element is populated on the dashboard.
   await page.visuallyAssert({
     assertionToTestFor:

@@ -10,7 +10,7 @@
  */
 import { test } from 'donobu';
 
-const title = 'Test for https://staging-dashboard.immerse.online/';
+const title = 'Test for https://dev-dashboard.immerse.online/';
 const details = {
   annotation: [
     {
@@ -21,7 +21,7 @@ const details = {
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto('https://staging-dashboard.immerse.online/login');
+  await page.goto('https://dev-dashboard.immerse.online/login');
   // Clicking on the language selector to open the language options.
   await page
     .find('#mantine-r0-target', {

@@ -41,6 +41,18 @@ jobs:
           else
             echo "✅ PASSWORD is set"
           fi
+          if [ -z "${{ vars.D2C_EMAIL }}" ]; then
+            echo "⚠️ WARNING: D2C_EMAIL variable is not set!"
+            echo "D2C login tests will be skipped"
+          else
+            echo "✅ D2C_EMAIL is set"
+          fi
+          if [ -z "${{ secrets.D2C_PASSWORD }}" ]; then
+            echo "⚠️ WARNING: D2C_PASSWORD secret is not set!"
+            echo "D2C login tests will be skipped"
+          else
+            echo "✅ D2C_PASSWORD is set"
+          fi
 
       - name: Run Smoke Tests
         id: run_tests
@@ -51,6 +63,8 @@ jobs:
           GOOGLE_GENERATIVE_AI_MODEL_NAME: gemini-2.5-flash
           EMAIL: ${{ vars.EMAIL }}
           PASSWORD: ${{ secrets.PASSWORD }}
+          D2C_EMAIL: ${{ vars.D2C_EMAIL || '' }}
+          D2C_PASSWORD: ${{ secrets.D2C_PASSWORD || '' }}
           # CI 환경에서는 self-healing 비활성화하여 API 호출 최소화
           SELF_HEAL_TESTS_ENABLED: false
         run: |
@@ -59,8 +73,29 @@ jobs:
           echo "Retries: 0 (to avoid additional API calls on failure)"
           echo "SELF_HEAL_TESTS_ENABLED: false (to minimize API calls)"
           echo "Timeout: 180 minutes"
-          xvfb-run npx playwright test tests/smoke-tests || true
-          echo "✅ Test execution completed"
+          echo ""
+          echo "📋 Running smoke tests with detailed output..."
+          
+          # Ensure test-results directory exists
+          mkdir -p test-results
+          mkdir -p playwright-report
+          
+          # Run tests
+          set +e
+          xvfb-run npx playwright test tests/smoke-tests --reporter=list --reporter=json --reporter=html 2>&1 | tee test-execution.log
+          TEST_EXIT_CODE=$?
+          set -e
+          
+          echo ""
+          echo "=========================================="
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ ALL SMOKE TESTS PASSED (exit code: $TEST_EXIT_CODE)"
+          else
+            echo "❌ SMOKE TESTS FAILED (exit code: $TEST_EXIT_CODE)"
+          fi
+          echo "=========================================="
+          
+          exit $TEST_EXIT_CODE
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4

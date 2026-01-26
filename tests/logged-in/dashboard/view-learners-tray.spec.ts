@@ -31,7 +31,7 @@ Assert that Time on Site Total is greater than 0.`,
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto("https://staging-dashboard.immerse.online/dashboard");
+  await page.goto("https://dev-dashboard.immerse.online/dashboard");
   // Waiting for the page to fully load as I can see a loading spinner, which indicates the dashboard is still loading before I can proceed with clicking on the Learners tab.
   await page.waitForTimeout(3000);
   // Clicking on the Learners tab as the first step in the objective to access the Learners tray and begin the test sequence.

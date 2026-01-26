@@ -10,7 +10,7 @@
  */
 import { test, expect } from 'donobu';
 
-const title = 'Test for https://staging-dashboard.immerse.online';
+const title = 'Test for https://dev-dashboard.immerse.online';
 const details = {
   annotation: [
     {
@@ -67,7 +67,7 @@ Confirm that it aligns visually beside the bar chart and does not overlap or mis
 test(title, details, async ({ page }) => {
   // Entering the username into the email field to log in.
   // Initializing web navigation.
-  await page.goto('https://staging-dashboard.immerse.online/dashboard');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard');
 
   // Asserting that the current URL contains 'dashboard' text to confirm successful login to the dashboard page.
   await expect(page).toHaveURL(/dashboard/);

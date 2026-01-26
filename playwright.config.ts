@@ -72,15 +72,13 @@ export default defineConfig({
       name: "logged-in-tests",
       testMatch: "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts",
       dependencies: ["dashboard-login-rw"],
-      use: { storageState: "login-state.json" },
+      use: { storageState: "rw-login-state.json" },
     },
     {
       name: "logged-in-tests",
       testMatch: "tests/logged-in/**/*.spec.ts",
       testIgnore: [
-        "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts",
-        "tests/logged-in/dashboard/d2c-schedule-workflow.spec.ts",
-        "tests/logged-in/dashboard/d2c-nvidia-launch-workflow.spec.ts"
+        "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts"
       ],
       dependencies: ["dashboard-login"],
       use: { storageState: "login-state.json" },

@@ -10,7 +10,7 @@
  */
 import { test, expect } from 'donobu';
 
-const title = 'Test for https://staging-dashboard.immerse.online';
+const title = 'Test for https://dev-dashboard.immerse.online';
 const details = {
     annotation: [
         {
@@ -39,7 +39,7 @@ Verify that the dashboard reverts to its initial state data range.`,
 };
 test(title, details, async ({ page }) => {
     // Initializing web navigation.
-    await page.goto('https://staging-dashboard.immerse.online/dashboard');
+    await page.goto('https://dev-dashboard.immerse.online/dashboard');
 
     // Asserting that the current URL contains 'dashboard' text to confirm successful login to the dashboard page.
     await expect(page).toHaveURL(/dashboard/);

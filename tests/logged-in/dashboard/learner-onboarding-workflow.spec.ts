@@ -17,8 +17,8 @@ const details = {
       type: 'objective',
       description: `Add a learner and complete onboarding (this requires some admin/contract setup)
 
-Enter Email: sample.hradmin.readwrite.6@immerse.online
-Enter Password: 6hradminreadwrite
+Enter Email: {{$.env.EMAIL}}
+Enter Password: {{$.env.PASSWORD}}
 Click on Log in
 Click on Learners Tab
 Navigate to a contract with an available license
@@ -60,7 +60,7 @@ test(title, details, async ({ page }) => {
   const generatedPassword = `Px${passwordRandomString}!${passwordRandomNumber}`;
 
   // Navigate to the login page
-  await page.goto('https://staging-dashboard.immerse.online/dashboard');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard');
   // Wait for page to load
   await page.waitForLoadState('networkidle');
   // Clicking on the Learners tab to navigate to the learners management section.
@@ -448,7 +448,7 @@ test(title, details, async ({ page }) => {
       `stop the work in app.immerse.online and go back to dashboard to check "${generatedEmail}" user status is active`,
   });
   // Acknowledging the user's instruction to stop the current work and navigate back to the dashboard to check the learner's status.
-  await page.goto('https://staging-dashboard.immerse.online/dashboard-learner');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard-learner');
   // Re-entering the learner's email address into the search field to check their status, as instructed by the user.
   await page
     .find("[placeholder='Search name, email, etc...']", {

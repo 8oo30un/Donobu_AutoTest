@@ -21,7 +21,7 @@ const details = {
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto('https://staging-dashboard.immerse.online/dashboard');
+  await page.goto('https://dev-dashboard.immerse.online/dashboard');
   // Waiting for the page to load.
   await page.waitForTimeout(5000);
   // Clicking the language dropdown to change the display language to Japanese.
