@@ -38,10 +38,14 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
+  // Wait for dropdown to open
+  await page.waitForTimeout(1000);
   // Selecting Japanese from the language options to change the display language.
   await page
     .find(".//button[normalize-space(.)='日本語']", {
       failover: [
+        ".//button[contains(text(), '日本語')]",
+        ".//button[contains(text(), 'Japanese')]",
         'div.css-1a47ai3 > div:nth-of-type(3) > div > button:nth-of-type(2)',
         'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(2)',
         'div.c-gqwkJN > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(2)',
@@ -50,6 +54,8 @@ test(title, details, async ({ page }) => {
         "[role='menuitem']",
         "[data-menu-item='true']",
         'button.mantine-Menu-item',
+        'button:has-text("日本語")',
+        'button:has-text("Japanese")',
       ],
     })
     .click();
