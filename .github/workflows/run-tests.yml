@@ -101,9 +101,27 @@ jobs:
           npx playwright test --list 2>&1 | head -30 || echo "Failed to list tests"
           echo ""
           echo "Running tests..."
+          # Run tests and capture output
           xvfb-run npx playwright test --reporter=list --reporter=json --reporter=html 2>&1 | tee test-execution.log
           TEST_EXIT_CODE=$?
           set -e  # Re-enable exit on error
+          
+          # Wait for reporters to finish
+          sleep 3
+          
+          # Check if JSON report was created, if not try to generate it
+          if [ ! -f "test-results/playwright-report.json" ]; then
+            echo "⚠️  JSON report not found, checking for alternative report files..."
+            # Try to find any JSON report files
+            if [ -f "test-results/.last-run.json" ]; then
+              echo "Found .last-run.json, but this is not a full report"
+            fi
+            # Try to use Playwright's merge command if available
+            if command -v npx >/dev/null 2>&1; then
+              echo "Attempting to generate JSON report from test results..."
+              npx playwright merge-reports test-results/.last-run.json --output test-results/playwright-report.json 2>&1 || echo "Could not merge reports"
+            fi
+          fi
 
           echo ""
           echo "=========================================="
@@ -116,6 +134,24 @@ jobs:
           echo ""
           # Analyze test results to show skipped tests
           echo "📊 Analyzing test results..."
+          echo ""
+          echo "=== EXECUTION SUMMARY FROM LOG ==="
+          # Extract summary from test execution log
+          if [ -f "test-execution.log" ]; then
+            echo "Test execution summary:"
+            grep -E "(passed|failed|skipped|did not run|Running.*tests)" test-execution.log | tail -10 || echo "Could not extract summary from log"
+            echo ""
+            # Count tests by status from log
+            PASSED_COUNT=$(grep -c "✅\|passed" test-execution.log 2>/dev/null || echo "0")
+            FAILED_COUNT=$(grep -c "✘\|failed" test-execution.log 2>/dev/null || echo "0")
+            SKIPPED_COUNT=$(grep -c "⏭️\|skipped\|did not run" test-execution.log 2>/dev/null || echo "0")
+            echo "From log analysis:"
+            echo "  Passed: $PASSED_COUNT"
+            echo "  Failed: $FAILED_COUNT"
+            echo "  Skipped/Did not run: $SKIPPED_COUNT"
+            echo ""
+          fi
+          
           if [ -f "test-results/playwright-report.json" ]; then
             echo ""
             echo "=== TEST SUMMARY ==="
@@ -171,15 +207,32 @@ jobs:
               fi
               echo ""
             fi
-          else
-            echo "⚠️  Could not analyze test results: test-results/playwright-report.json not found"
-            echo "   Checking test-execution.log for test results..."
-            if [ -f "test-execution.log" ]; then
+            else
+              echo "⚠️  Could not analyze test results: test-results/playwright-report.json not found"
               echo ""
-              echo "=== Test execution summary from log ==="
-              grep -E "passed|failed|skipped|Running.*tests" test-execution.log | tail -20 || echo "No summary found in log"
+              echo "=== DETAILED ANALYSIS FROM TEST EXECUTION LOG ==="
+              if [ -f "test-execution.log" ]; then
+                echo ""
+                echo "--- Tests that DID run ---"
+                grep -E "^\s+[0-9]+\)|passed|failed" test-execution.log | head -30 || echo "No test execution details found"
+                echo ""
+                echo "--- Tests that DID NOT run (skipped due to dependencies) ---"
+                # List all 24 tests and check which ones are missing from execution log
+                echo "Expected 24 tests, but only a few ran."
+                echo "This usually means:"
+                echo "  1. Login tests failed → dependent tests were skipped"
+                echo "  2. Check failed login tests above to see why dependencies failed"
+                echo ""
+                echo "Common dependency chain:"
+                echo "  - dashboard-login fails → logged-in-tests skipped (10 tests)"
+                echo "  - dashboard-login-rw fails → learner-onboarding-workflow skipped (1 test)"
+                echo "  - d2c-login fails → d2c-logged-in-tests skipped (2 tests)"
+                echo "  - b2b-smoke-test-login fails → logged-in-smoke-tests skipped (5 tests)"
+                echo ""
+                echo "To see which specific tests were skipped, check the test list above"
+                echo "and compare with the tests that actually ran."
+              fi
             fi
-          fi
           echo ""
 
           # Wait a moment for reporters to finish writing files
