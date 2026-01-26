@@ -32,12 +32,17 @@ test(title, details, async ({ page }) => {
   }
   // Clicking on the language selector to open the language options.
   await page
-    .find("[aria-label='Display Language']", {
+    .find(".//div[normalize-space(.)='En']", {
       failover: [
+        "[aria-haspopup='menu'][aria-expanded='false']",
+        "div[aria-haspopup='menu']:has-text('En')",
+        "div[aria-haspopup='menu']:has-text('ENGLISH')",
+        "[aria-label='Display Language']",
         "[role='searchbox'][aria-label='Display Language']",
         "input[aria-label='Display Language']",
         "(.//div[normalize-space(.)='ENGLISH'])[1]",
         ".//div[contains(text(), 'ENGLISH')]",
+        ".//div[contains(text(), 'En')]",
         'div.css-18wbxrz',
         'div.css-1a47ai3 > div:nth-of-type(2)',
         'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(2)',
