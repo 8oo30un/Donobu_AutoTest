@@ -78,7 +78,8 @@ export default defineConfig({
       name: "logged-in-tests",
       testMatch: "tests/logged-in/**/*.spec.ts",
       testIgnore: [
-        "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts"
+        "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts",
+        "tests/logged-in/dashboard/d2c-*.spec.ts"
       ],
       dependencies: ["dashboard-login"],
       use: { storageState: "login-state.json" },
