@@ -80,8 +80,11 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
-  // Asserting that the display language has been changed to Spanish by checking for the presence of 'ESPAÑOL' text in the language dropdown.
-  await expect(page.getByText('ESPAÑOL')).toBeVisible();
+  // Wait for language change to take effect
+  await page.waitForTimeout(1000);
+  // Asserting that the display language has been changed to Spanish by checking for Spanish text on the page.
+  // Using "Acceso" (Spanish for "Log In") instead of checking for "ESPAÑOL" in the dropdown
+  await expect(page.getByText('Acceso')).toBeVisible();
   // Clicking on the display language dropdown to change the language back to English.
   await page
     .find("[aria-label='Idioma de visualización']", {

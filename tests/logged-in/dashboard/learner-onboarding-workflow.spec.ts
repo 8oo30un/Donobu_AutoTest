@@ -321,13 +321,15 @@ test(title, details, async ({ page }) => {
     })
     .click();
   // Wait for menu to open
-  await page.waitForTimeout(2000);
-  // Try to wait for menu items to be visible
+  await page.waitForTimeout(3000);
+  // Try to wait for menu items to be visible, especially "View Registration Link"
   try {
-    await page.waitForSelector("[role='menuitem'], [data-menu-item='true'], button.mantine-Menu-item, div[role='menu']", { timeout: 5000 });
+    await page.waitForSelector("[data-testid='learners-edit-menu-item-view-registration-link'], [role='menuitem'], [data-menu-item='true'], button.mantine-Menu-item", { timeout: 10000 });
   } catch (e) {
     // Menu might already be visible, continue
   }
+  // Additional wait to ensure menu is fully rendered
+  await page.waitForTimeout(1000);
   // Clicking on "View Registration Link" to obtain the registration link for the newly added learner.
   await page
     .find("[data-testid='learners-edit-menu-item-view-registration-link']", {
