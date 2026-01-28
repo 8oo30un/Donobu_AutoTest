@@ -26,10 +26,23 @@ test(title, details, async ({ page }) => {
   // Navigate to the d2c learner home page
   await page.goto('https://app.immerse.online/home');
   // Wait for navigation and verify we're on the correct page
-  await page.waitForURL(/.*\/home/, { timeout: 30000 });
-  // Check if we were redirected to login page (authentication failed)
-  if (page.url().includes('/login')) {
-    throw new Error('Authentication failed: Redirected to login page. Check if d2c-login-state.json was created successfully.');
+  try {
+    await page.waitForURL(/.*\/home/, { timeout: 30000 });
+  } catch (e) {
+    // Check current URL to provide better error message
+    const currentURL = page.url();
+    if (currentURL.includes('/login')) {
+      throw new Error('Authentication failed: Redirected to login page. Check if d2c-login-state.json was created successfully.');
+    } else if (currentURL.includes('www.immerse.com')) {
+      throw new Error(`Authentication failed: Redirected to www.immerse.com instead of app.immerse.online/home. Current URL: ${currentURL}. Check if d2c-login-state.json was created successfully.`);
+    } else {
+      throw new Error(`Unexpected URL after navigation. Expected /home, but got: ${currentURL}`);
+    }
+  }
+  // Verify we're actually on the home page
+  const currentURL = page.url();
+  if (!currentURL.includes('/home') && !currentURL.includes('app.immerse.online')) {
+    throw new Error(`Authentication failed: Not on expected page. Current URL: ${currentURL}`);
   }
   await page.waitForTimeout(3000);
 
