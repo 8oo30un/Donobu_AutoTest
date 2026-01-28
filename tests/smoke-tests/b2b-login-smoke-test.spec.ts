@@ -85,11 +85,30 @@ test(title, details, async ({ page }) => {
   // Asserting that the display language has been changed to Spanish by checking for Spanish text on the page.
   // Using "Acceso" (Spanish for "Log In") instead of checking for "ESPAÑOL" in the dropdown
   await expect(page.getByText('Acceso')).toBeVisible();
+  // Wait for page to fully load before attempting to find language selector
+  await page.waitForTimeout(2000);
+  // Try to wait for language selector to be visible
+  try {
+    await page.waitForSelector("[aria-label='Idioma de visualización'], [aria-label='Display Language'], div:has-text('ESPAÑOL'), div:has-text('Es'), [role='searchbox'][aria-label='Display Language'], div.css-1j0a71q:has-text('Es')[aria-haspopup='menu']", { timeout: 5000 });
+  } catch (e) {
+    // Language selector might not be visible, continue anyway
+  }
   // Clicking on the display language dropdown to change the language back to English.
+  // Use the same pattern as before but look for "Es" or "Español" text
   await page
-    .find("[aria-label='Idioma de visualización']", {
+    .find(".//div[normalize-space(.)='Es']", {
       failover: [
+        "div.css-1j0a71q:has-text('Es')[aria-haspopup='menu']",
+        "[aria-haspopup='menu'][aria-expanded='false']",
+        "div[aria-haspopup='menu']:has-text('Es')",
+        "div[aria-haspopup='menu']:has-text('ESPAÑOL')",
+        "[aria-label='Idioma de visualización']",
+        "[aria-label='Display Language']",
+        "[role='searchbox'][aria-label='Display Language']",
+        "input[aria-label='Display Language']",
         "(.//div[normalize-space(.)='ESPAÑOL'])[1]",
+        ".//div[contains(text(), 'ESPAÑOL')]",
+        ".//div[contains(text(), 'Es')]",
         'div.css-18wbxrz',
         'div.css-1a47ai3 > div:nth-of-type(2)',
         'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(2)',
@@ -98,6 +117,8 @@ test(title, details, async ({ page }) => {
         'html > body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
         'body > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
         ".//div[normalize-space(.)='ESPAÑOL']",
+        "//div[contains(@class, 'Select')]",
+        "//div[contains(@class, 'language')]",
       ],
     })
     .click();
