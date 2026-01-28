@@ -64,7 +64,47 @@ jobs:
           D2C_PASSWORD: ${{ secrets.D2C_PASSWORD || '' }}
           SELF_HEAL_TESTS_ENABLED: true
 
-        run: xvfb-run npx playwright test
+        run: |
+          echo "🚀 Starting Playwright tests..."
+          echo "Current directory: $(pwd)"
+          echo "Test directory exists: $(test -d tests && echo 'yes' || echo 'no')"
+          echo "Playwright config exists: $(test -f playwright.config.ts && echo 'yes' || echo 'no')"
+          echo ""
+          echo "📋 Listing available tests..."
+          npx playwright test --list || echo "⚠️ Failed to list tests"
+          echo ""
+          echo "▶️ Running tests..."
+          set +e
+          xvfb-run npx playwright test
+          TEST_EXIT_CODE=$?
+          set -e
+          echo ""
+          echo "=========================================="
+          if [ $TEST_EXIT_CODE -eq 0 ]; then
+            echo "✅ Tests completed (exit code: $TEST_EXIT_CODE)"
+          else
+            echo "❌ Tests failed (exit code: $TEST_EXIT_CODE)"
+          fi
+          echo "=========================================="
+          echo ""
+          echo "📊 Checking for test results..."
+          if [ -d "test-results" ]; then
+            echo "✅ test-results directory exists"
+            ls -la test-results/ | head -20
+          else
+            echo "❌ test-results directory does NOT exist"
+          fi
+          if [ -f "test-results/playwright-report.json" ]; then
+            echo "✅ playwright-report.json exists"
+          else
+            echo "❌ playwright-report.json does NOT exist"
+          fi
+          if [ -d "playwright-report" ]; then
+            echo "✅ playwright-report directory exists"
+          else
+            echo "❌ playwright-report directory does NOT exist"
+          fi
+          exit $TEST_EXIT_CODE
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4
