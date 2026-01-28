@@ -25,6 +25,12 @@ const details = {
 test(title, details, async ({ page }) => {
   // Navigate to the d2c learner home page
   await page.goto('https://app.immerse.online/home');
+  // Wait for navigation and verify we're on the correct page
+  await page.waitForURL(/.*\/home/, { timeout: 30000 });
+  // Check if we were redirected to login page (authentication failed)
+  if (page.url().includes('/login')) {
+    throw new Error('Authentication failed: Redirected to login page. Check if d2c-login-state.json was created successfully.');
+  }
   await page.waitForTimeout(3000);
   // Clicking on the 'Schedule' link to navigate to the schedule page, as per the objective.
   await page

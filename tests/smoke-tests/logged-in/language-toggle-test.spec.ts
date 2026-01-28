@@ -24,9 +24,23 @@ Edit Columns/Filters`,
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
   await page.goto('https://dev-dashboard.immerse.online/login');
+  // Wait for page to fully load before attempting to find language selector
+  await page.waitForTimeout(2000);
+  // Try to wait for language selector to be visible
+  try {
+    await page.waitForSelector("[aria-label='Display Language'], div:has-text('ENGLISH'), [role='searchbox'][aria-label='Display Language'], div.css-1j0a71q:has-text('En')[aria-haspopup='menu']", { timeout: 5000 });
+  } catch (e) {
+    // Language selector might not be visible, continue anyway
+  }
   // Clicking the language dropdown to change the display language on the login page.
   await page
-    .find("[aria-label='Display Language']", {
+    .find(".//div[normalize-space(.)='En']", {
+      failover: [
+        "div.css-1j0a71q:has-text('En')[aria-haspopup='menu']",
+        "[aria-haspopup='menu'][aria-expanded='false']",
+        "div[aria-haspopup='menu']:has-text('En')",
+        "div[aria-haspopup='menu']:has-text('ENGLISH')",
+        "[aria-label='Display Language']",
       failover: [
         "(.//div[normalize-space(.)='ENGLISH'])[1]",
         'div.css-18wbxrz',
