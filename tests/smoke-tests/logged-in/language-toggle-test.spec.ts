@@ -41,7 +41,8 @@ test(title, details, async ({ page }) => {
         "div[aria-haspopup='menu']:has-text('En')",
         "div[aria-haspopup='menu']:has-text('ENGLISH')",
         "[aria-label='Display Language']",
-      failover: [
+        "[role='searchbox'][aria-label='Display Language']",
+        "input[aria-label='Display Language']",
         "(.//div[normalize-space(.)='ENGLISH'])[1]",
         'div.css-18wbxrz',
         'div.css-1a47ai3 > div:nth-of-type(2)',
