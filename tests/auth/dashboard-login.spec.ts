@@ -67,27 +67,71 @@ test(title, details, async ({ page }) => {
     throw new Error('Password was not entered into the password field!');
   }
   // Clicking the Login button to submit the credentials and proceed to the dashboard as specified in the objective.
-  await page
+  const loginButton = await page
     .find(".//button[normalize-space(.)='Login']", {
       failover: [
         'button[type="submit"]',
         ".//button[contains(text(), 'Log')]",
         'button',
       ],
-    })
-    .click();
+    });
+  
+  // Wait for button to be enabled
+  await loginButton.waitFor({ state: 'visible', timeout: 5000 });
+  console.log('Login button found and visible');
+  
+  // Take screenshot before clicking login
+  await page.screenshot({ path: 'test-results/before-login-click.png', fullPage: true });
+  
+  // Click login button and wait for navigation
+  const [response] = await Promise.all([
+    page.waitForResponse(response => 
+      response.url().includes('/api/') || 
+      response.url().includes('/auth/') ||
+      response.status() === 200 || 
+      response.status() === 302
+    , { timeout: 10000 }).catch(() => null),
+    loginButton.click(),
+  ]);
+  
+  console.log(`Login response: ${response ? response.status() : 'No response'}`);
+  console.log(`Response URL: ${response ? response.url() : 'N/A'}`);
+  
   // Wait a bit for login to process
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(5000);
+  
   // Check current URL for debugging
   const currentUrl = page.url();
   console.log(`Current URL after login click: ${currentUrl}`);
-  // Check for error messages
-  const errorText = await page.locator('text=/error|invalid|incorrect|failed/i').first().isVisible().catch(() => false);
-  if (errorText) {
-    const errorMessage = await page.locator('text=/error|invalid|incorrect|failed/i').first().textContent().catch(() => 'Unknown error');
-    console.log(`Login error detected: ${errorMessage}`);
-    await page.screenshot({ path: 'test-results/login-error.png', fullPage: true });
+  
+  // Check for error messages more thoroughly
+  const errorSelectors = [
+    'text=/invalid/i',
+    'text=/incorrect/i',
+    'text=/failed/i',
+    'text=/error/i',
+    '[role="alert"]',
+    '.error',
+    '[class*="error"]',
+  ];
+  
+  for (const selector of errorSelectors) {
+    const errorElement = await page.locator(selector).first().isVisible().catch(() => false);
+    if (errorElement) {
+      const errorMessage = await page.locator(selector).first().textContent().catch(() => 'Unknown error');
+      console.log(`Login error detected with selector ${selector}: ${errorMessage}`);
+      await page.screenshot({ path: 'test-results/login-error.png', fullPage: true });
+      throw new Error(`Login failed: ${errorMessage}`);
+    }
   }
+  
+  // If still on login page after 5 seconds, something went wrong
+  if (currentUrl.includes('/login')) {
+    await page.screenshot({ path: 'test-results/still-on-login-page.png', fullPage: true });
+    const pageText = await page.textContent('body').catch(() => '');
+    console.log(`Page still on login. Body text preview: ${pageText.substring(0, 200)}`);
+  }
+  
   // Waiting for the login process to complete and the page to redirect to the dashboard after clicking the Login button.
   await page.waitForURL('**/dashboard**', { timeout: 90000 });
   // Verifying that the user has successfully landed on the Dashboard home page by checking for the presence of "Learning Summary" text as specified in the objective.
