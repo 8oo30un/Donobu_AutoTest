@@ -43,6 +43,17 @@ test(title, details, async ({ page }) => {
     .click();
   // Waiting for the login process to complete and the page to redirect to the logged-in page after clicking the Login button.
   await page.waitForTimeout(3000);
+  
+  // Check current URL for debugging
+  const currentUrl = page.url();
+  console.log(`Current URL after login click: ${currentUrl}`);
+  // Check for error messages
+  const errorText = await page.locator('text=/error|invalid|incorrect|failed/i').first().isVisible().catch(() => false);
+  if (errorText) {
+    const errorMessage = await page.locator('text=/error|invalid|incorrect|failed/i').first().textContent().catch(() => 'Unknown error');
+    console.log(`Login error detected: ${errorMessage}`);
+    await page.screenshot({ path: 'test-results/login-error.png', fullPage: true });
+  }
 
   // Asserting that the current URL contains the word "nvidia" to confirm navigation to nvidia page.
   await expect(page).toHaveURL(/gfn\/desktop/, { timeout: 90000 });

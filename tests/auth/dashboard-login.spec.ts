@@ -49,6 +49,18 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
+  // Wait a bit for login to process
+  await page.waitForTimeout(3000);
+  // Check current URL for debugging
+  const currentUrl = page.url();
+  console.log(`Current URL after login click: ${currentUrl}`);
+  // Check for error messages
+  const errorText = await page.locator('text=/error|invalid|incorrect|failed/i').first().isVisible().catch(() => false);
+  if (errorText) {
+    const errorMessage = await page.locator('text=/error|invalid|incorrect|failed/i').first().textContent().catch(() => 'Unknown error');
+    console.log(`Login error detected: ${errorMessage}`);
+    await page.screenshot({ path: 'test-results/login-error.png', fullPage: true });
+  }
   // Waiting for the login process to complete and the page to redirect to the dashboard after clicking the Login button.
   await page.waitForURL('**/dashboard**', { timeout: 90000 });
   // Verifying that the user has successfully landed on the Dashboard home page by checking for the presence of "Learning Summary" text as specified in the objective.

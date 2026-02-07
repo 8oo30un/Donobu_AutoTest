@@ -45,6 +45,19 @@ test(title, details, async ({ page, context }) => {
       failover: ['button.css-3wz0nu', 'div.css-1fhtl0l > button'],
     })
     .click();
+  
+  // Wait a bit for login to process
+  await page.waitForTimeout(3000);
+  // Check current URL for debugging
+  const currentUrl = page.url();
+  console.log(`Current URL after login click: ${currentUrl}`);
+  // Check for error messages
+  const errorText = await page.locator('text=/error|invalid|incorrect|failed/i').first().isVisible().catch(() => false);
+  if (errorText) {
+    const errorMessage = await page.locator('text=/error|invalid|incorrect|failed/i').first().textContent().catch(() => 'Unknown error');
+    console.log(`Login error detected: ${errorMessage}`);
+    await page.screenshot({ path: 'test-results/login-error.png', fullPage: true });
+  }
 
   // Verify navigation to GFN desktop after login
   await expect(page).toHaveURL(/.*gfn\/desktop/);
