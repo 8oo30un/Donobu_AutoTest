@@ -15,52 +15,37 @@ Verify user lands on Dashboard home page by asserting the words "Learning Summar
 };
 test(title, details, async ({ page }) => {
   // Navigate to the URL and wait for the network to become idle.
-  await page.goto('https://dev-dashboard.immerse.online', { waitUntil: 'networkidle' });
-  const email = process.env.EMAIL;
-  const password = process.env.PASSWORD;
-  
-  if (!email || !password) {
-    throw new Error("EMAIL and PASSWORD environment variables must be set");
-  }
-  
+  await page.goto('https://dev-dashboard.immerse.online', { waitUntil: 'networkidle', timeout: 90000 });
+  await page.waitForTimeout(15000);
   // Entering the email address as specified in the objective to log in to the b2b dashboard.
   await page
-    .find("[data-testid='login-form-email-input']", {
+    .find("[placeholder='Email']", {
       failover: [
-        "[placeholder='Email']",
-        'div:nth-of-type(1) > input.c-gtNREi',
-        'div.c-jhyvPY > div:nth-of-type(2) > div:nth-of-type(1) > input',
-        'div.c-gqwkJN > div > div:nth-of-type(2) > div:nth-of-type(1) > input',
-        'div.c-ejwOqd > div > div > div:nth-of-type(2) > div:nth-of-type(1) > input',
-        'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(1) > input',
-        'input.c-gtNREi',
+        'input[type="email"]',
+        'input[name="email"]',
+        '#email',
+        'div:nth-of-type(1) > input',
       ],
     })
-    .inputText(email);
+    .inputText('sample.hradmin.readonly.6@immerse.online');
   // Entering the password as specified in the objective to complete the login credentials for the b2b dashboard.
   await page
-    .find("[data-testid='login-form-password-input']", {
+    .find("[placeholder='Password']", {
       failover: [
-        "[placeholder='Password']",
-        'div:nth-of-type(2) > input.c-gtNREi',
-        'div.c-jhyvPY > div:nth-of-type(2) > div:nth-of-type(2) > input',
-        'div.c-gqwkJN > div > div:nth-of-type(2) > div:nth-of-type(2) > input',
-        'div.c-ejwOqd > div > div > div:nth-of-type(2) > div:nth-of-type(2) > input',
-        'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(2) > input',
-        'input.c-gtNREi',
+        'input[type="password"]',
+        'input[name="password"]',
+        '#password',
+        'div:nth-of-type(2) > input',
       ],
     })
-    .inputText(password);
+    .inputText(process.env.B2B_PASSWORD_READONLY || '');
   // Clicking the Login button to submit the credentials and proceed to the dashboard as specified in the objective.
   await page
-    .find("[data-testid='login-form-submit-button']", {
+    .find(".//button[normalize-space(.)='Login']", {
       failover: [
-        ".//button[normalize-space(.)='Login']",
-        'button.c-gNnAWR',
-        'div.c-jhyvPY > button',
-        'div.c-gqwkJN > div > button',
-        'div.c-ejwOqd > div > div > button',
-        'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > button',
+        'button[type="submit"]',
+        ".//button[contains(text(), 'Log')]",
+        'button',
       ],
     })
     .click();

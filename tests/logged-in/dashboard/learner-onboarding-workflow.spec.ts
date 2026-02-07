@@ -17,8 +17,8 @@ const details = {
       type: 'objective',
       description: `Add a learner and complete onboarding (this requires some admin/contract setup)
 
-Enter Email: {{$.env.EMAIL}}
-Enter Password: {{$.env.PASSWORD}}
+Enter Email: sample.hradmin.readwrite.6@immerse.online
+Enter Password: {{$.env.B2B_PASSWORD_READWRITE}}
 Click on Log in
 Click on Learners Tab
 Navigate to a contract with an available license
@@ -320,53 +320,19 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
-  // Wait for menu to open
-  await page.waitForTimeout(3000);
-  // Try to wait for menu items to be visible, especially "View Registration Link"
-  try {
-    await page.waitForSelector("[data-testid='learners-edit-menu-item-view-registration-link'], [role='menuitem'], [data-menu-item='true'], button.mantine-Menu-item", { timeout: 10000 });
-  } catch (e) {
-    // Menu might already be visible, continue
-  }
-  // Additional wait to ensure menu is fully rendered
-  await page.waitForTimeout(1000);
   // Clicking on "View Registration Link" to obtain the registration link for the newly added learner.
   await page
     .find("[data-testid='learners-edit-menu-item-view-registration-link']", {
       failover: [
         ".//button[normalize-space(.)='View Registration Link']",
-        ".//button[contains(text(), 'View Registration Link')]",
-        ".//button[contains(text(), 'Registration Link')]",
-        ".//a[normalize-space(.)='View Registration Link']",
-        ".//a[contains(text(), 'View Registration Link')]",
-        ".//div[normalize-space(.)='View Registration Link']",
-        ".//div[contains(text(), 'View Registration Link')]",
-        "//button[normalize-space(.)='View Registration Link']",
-        "[role='menuitem']:has-text('View Registration Link')",
-        "[data-menu-item='true']:has-text('View Registration Link')",
-        "button.mantine-Menu-item:has-text('View Registration Link')",
-        "a.mantine-Menu-item:has-text('View Registration Link')",
-        "div.mantine-Menu-item:has-text('View Registration Link')",
         "[data-testid='learners-table-cell-edit-235514'] > div > div > button:nth-of-type(1)",
-        "[data-testid='learners-table-cell-edit-235514'] > div > div > a:nth-of-type(1)",
-        "[data-testid='learners-table-cell-edit-235514'] > div > div > div:nth-of-type(1)",
         'div.mantine-kwn0a8 > table > tbody > tr > td:nth-of-type(14) > div > div > button:nth-of-type(1)',
-        'div.mantine-kwn0a8 > table > tbody > tr > td:nth-of-type(14) > div > div > a:nth-of-type(1)',
-        'div.mantine-kwn0a8 > table > tbody > tr > td:nth-of-type(14) > div > div > div:nth-of-type(1)',
         "[data-testid='learners-table-row-235514'] > td:nth-of-type(14) > div > div > button:nth-of-type(1)",
-        "[data-testid='learners-table-row-235514'] > td:nth-of-type(14) > div > div > a:nth-of-type(1)",
-        "[data-testid='learners-table-row-235514'] > td:nth-of-type(14) > div > div > div:nth-of-type(1)",
         "[data-testid='learners-table'] > tbody > tr > td:nth-of-type(14) > div > div > button:nth-of-type(1)",
-        "[data-testid='learners-table'] > tbody > tr > td:nth-of-type(14) > div > div > a:nth-of-type(1)",
-        "[data-testid='learners-table'] > tbody > tr > td:nth-of-type(14) > div > div > div:nth-of-type(1)",
         'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(14) > div > div > button:nth-of-type(1)',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(14) > div > div > a:nth-of-type(1)',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(3) > table > tbody > tr > td:nth-of-type(14) > div > div > div:nth-of-type(1)',
         "[role='menuitem']",
         "[data-menu-item='true']",
         'button.mantine-Menu-item',
-        'a.mantine-Menu-item',
-        'div.mantine-Menu-item',
       ],
     })
     .click();

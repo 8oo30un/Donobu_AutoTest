@@ -17,8 +17,8 @@ const details = {
       type: 'objective',
       description: `Log in and verify data integrity of TOS and Activities Completed
 
-- Enter Email: {{$.env.EMAIL}}
-- Enter Password: {{$.env.PASSWORD}}
+- Enter Email: sample.hradmin.readonly.6@immerse.online
+- Enter Password: {{$.env.B2B_PASSWORD_READONLY}}
 Click on Learners Tab
 Change Timeframe to "All Time"
 Wait for Learners to load

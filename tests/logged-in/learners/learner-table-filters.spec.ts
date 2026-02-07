@@ -22,8 +22,10 @@ const details = {
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
   await page.goto('https://dev-dashboard.immerse.online/dashboard');
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(5000);
   // Clicking on the 'Learners' tab to navigate to the learners page.
-  await page.getByRole("button", { name: "Learners" }).waitFor({ state: "visible" , timeout: 10000 });
+  await page.getByRole("button", { name: "Learners" }).waitFor({ state: "visible" , timeout: 30000 });
   await page
     .find("[data-testid='layout-header-learners-button']", {
       failover: [

@@ -24,34 +24,16 @@ Edit Columns/Filters`,
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
   await page.goto('https://dev-dashboard.immerse.online/login');
-  // Wait for page to fully load before attempting to find language selector
-  await page.waitForTimeout(2000);
-  // Try to wait for language selector to be visible
-  try {
-    await page.waitForSelector("[aria-label='Display Language'], div:has-text('ENGLISH'), [role='searchbox'][aria-label='Display Language'], div.css-1j0a71q:has-text('En')[aria-haspopup='menu']", { timeout: 5000 });
-  } catch (e) {
-    // Language selector might not be visible, continue anyway
-  }
+  // Wait for page to load
+  await page.waitForLoadState('domcontentloaded');
+  await page.waitForTimeout(5000);
   // Clicking the language dropdown to change the display language on the login page.
   await page
-    .find(".//div[normalize-space(.)='En']", {
+    .find("img[alt='Language globe icon']", {
       failover: [
-        "div.css-1j0a71q:has-text('En')[aria-haspopup='menu']",
-        "[aria-haspopup='menu'][aria-expanded='false']",
-        "div[aria-haspopup='menu']:has-text('En')",
-        "div[aria-haspopup='menu']:has-text('ENGLISH')",
+        "img[alt='Open language menu']",
         "[aria-label='Display Language']",
-        "[role='searchbox'][aria-label='Display Language']",
-        "input[aria-label='Display Language']",
-        "(.//div[normalize-space(.)='ENGLISH'])[1]",
-        'div.css-18wbxrz',
-        'div.css-1a47ai3 > div:nth-of-type(2)',
-        'div.c-jhyvPY > div:nth-of-type(1) > div:nth-of-type(2)',
-        'div.c-gqwkJN > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        'div.c-ejwOqd > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        'html > body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        'body > div:nth-of-type(1) > div:nth-of-type(1) > div > div > div:nth-of-type(1) > div:nth-of-type(2)',
-        ".//div[normalize-space(.)='ENGLISH']",
+        '#mantine-r0-target',
       ],
     })
     .click();
@@ -209,17 +191,8 @@ test(title, details, async ({ page }) => {
     .click();
   // Verifying that the language on the Filters page has been successfully swapped to Spanish by checking for the 'Ubicación' heading.
   await expect(page.getByText('Ubicación').first()).toBeVisible();
-  // Verifying that the language on the Filters page has been successfully swapped to Spanish by checking for Spanish text.
-  // Note: 'Nivel inicial' might not always be present, so we check for other Spanish text instead
-  try {
-    await expect(page.getByText('Nivel inicial').first()).toBeVisible({ timeout: 5000 });
-  } catch (e) {
-    // If 'Nivel inicial' is not found, check for other Spanish text to verify language change
-    const hasSpanishText = await page.getByText(/Filtros|Ubicación|Nivel|Inicial|Aplicar|Guardar/i).first().isVisible().catch(() => false);
-    if (!hasSpanishText) {
-      throw new Error('Language change verification failed: No Spanish text found on Filters page');
-    }
-  }
+  // Verifying that the language on the Filters page has been successfully swapped to Spanish by checking for the 'Nivel inicial' heading.
+  await expect(page.getByText('Nivel inicial').first()).toBeVisible();
   // Closing the filters drawer to access the 'Edit Columns/Filters' button.
   await page
     .find('div.mantine-w29q45 > button > svg', {
@@ -230,21 +203,11 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
-  // Clicking the 'Edit Columns/Filters' button to verify language swap on the 'Edit Columns/Filters' page.
-  await page
-    .find(".//button[normalize-space(.)='Edit Columns/Filters']", {
-      failover: [
-        'div.mantine-1rlbqtv > div:nth-of-type(1) > button:nth-of-type(3)',
-        'div.mantine-1hv2vg > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-        'div.mantine-1ywgif7 > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-        'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-        'div.c-ejwOqd > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-        'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-        "[data-button='true']",
-        'button.mantine-UnstyledButton-root',
-      ],
-    })
-    .click();
+  // Clicking the 'Editar columnas/filtros' button (Spanish) to verify language swap on the 'Edit Columns/Filters' page.
+  await page.getByRole('button', { name: 'Editar columnas/filtros' }).click();
+
+  // Wait for modal to open
+  await page.waitForSelector("[role='dialog']", { state: 'visible', timeout: 10000 });
   // Verifying that the language on the 'Edit Columns/Filters' modal has been successfully swapped to Spanish by checking for the 'Nombre' heading.
   await expect(page.getByText('Nombre').first()).toBeVisible();
   // Verifying that the language on the 'Edit Columns/Filters' modal has been successfully swapped to Spanish by checking for the 'Correo Electrónico' heading.

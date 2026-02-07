@@ -71,8 +71,7 @@ test(title, details, async ({ page }) => {
     },
   });
   // Asserting that the table shows "5 results" and Licenses show "25/30" as per the overall objective.
-  // Note: License information may not always be visible, so we make the assertion more flexible
   await page.visuallyAssert({
-    assertionToTestFor: 'The table shows "5 results".',
+    assertionToTestFor: 'The table shows "5 results" and "Licenses: 25/30".',
   });
 });

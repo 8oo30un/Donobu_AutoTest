@@ -35,9 +35,9 @@ export default defineConfig({
         launchOptions: {
           args: [
             "--use-fake-ui-for-media-stream", // auto-allow prompt
-            "--use-fake-device-for-media-stream" // synthetic mic
+            "--use-fake-device-for-media-stream", // synthetic mic
           ],
-          headless: false // real mic won't work in headless
+          headless: false, // real mic won't work in headless
         },
       },
     },
@@ -62,15 +62,16 @@ export default defineConfig({
         launchOptions: {
           args: [
             "--use-fake-ui-for-media-stream", // auto-allow prompt
-            "--use-fake-device-for-media-stream" // synthetic mic
+            "--use-fake-device-for-media-stream", // synthetic mic
           ],
-          headless: false // real mic won't work in headless
+          headless: false, // real mic won't work in headless
         },
       },
     },
     {
       name: "logged-in-tests",
-      testMatch: "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts",
+      testMatch:
+        "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts",
       dependencies: ["dashboard-login-rw"],
       use: { storageState: "rw-login-state.json" },
     },
@@ -79,7 +80,7 @@ export default defineConfig({
       testMatch: "tests/logged-in/**/*.spec.ts",
       testIgnore: [
         "tests/logged-in/dashboard/learner-onboarding-workflow.spec.ts",
-        "tests/logged-in/dashboard/d2c-*.spec.ts"
+        "tests/logged-in/dashboard/d2c-*.spec.ts",
       ],
       dependencies: ["dashboard-login"],
       use: { storageState: "login-state.json" },
@@ -107,6 +108,7 @@ export default defineConfig({
   timeout: 360000, // 360 seconds timeout for each test to give enough time for LLM API calls for smart assertions
   // Global test configuration
   use: {
+    ...devices["Desktop Chrome"], // Use Chromium browser
     screenshot: "on",
     video: "on",
     // Add action timeout for individual actions like clicks

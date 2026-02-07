@@ -420,16 +420,10 @@ test(title, details, async ({ page }) => {
   searchCount = await searchResults.count();
   expect(searchCount).toBeGreaterThan(0);
 
-  // Check that at least some results contain "US" (allowing for partial matches like "US" in country codes)
-  let usMatchCount = 0;
   for (let i = 0; i < searchCount; i++) {
     const cellText = (await searchResults.nth(i).textContent())?.trim() || "";
-    if (cellText.toLowerCase().includes("us")) {
-      usMatchCount++;
-    }
+    expect(cellText.toLowerCase()).toContain("US".toLocaleLowerCase());
   }
-  // At least one result should match "US" (allowing for data variations)
-  expect(usMatchCount).toBeGreaterThan(0);
   // Clearing the search input field to prepare for the next search query, as per the overall objective.
   await page
     .find('#mantine-r6', {
@@ -628,38 +622,12 @@ test(title, details, async ({ page }) => {
     retryWaitSeconds: 5,
   });
   // Clicking on the 'Edit Columns/Filters' button to open the configuration modal or side panel, as required by the overall objective.
-  await page
-    .find(
-      '#__next > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-      {
-        failover: [
-          ".//button[normalize-space(.)='Edit Columns/Filters']",
-          'div.mantine-1rlbqtv > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.mantine-1hv2vg > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.mantine-1ywgif7 > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.c-ejwOqd > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          "[data-button='true']",
-          'button.mantine-UnstyledButton-root',
-        ],
-      },
-    )
-    .click();
+  await page.getByRole('button', { name: 'Edit Columns/Filters' }).click();
 
-  // Wait for modal to open
-  await page.waitForTimeout(2000);
-  // Try to wait for modal/drawer to be visible
-  try {
-    await page.waitForSelector("[role='dialog'], div.mantine-Modal-root, div.mantine-Drawer-drawer, div[role='presentation']", { timeout: 5000 });
-  } catch (e) {
-    // Modal might already be visible, continue
-  }
   // Verifying that a configuration modal or side panel has opened after clicking the 'Edit Columns/Filters' button.
-  // Use a more flexible assertion that checks for the modal content rather than just the title
   await page.visuallyAssert({
     assertionToTestFor:
-      "Assert that a modal or side panel is visible with configuration options for editing columns and filters. The modal should contain checkboxes or toggles for columns.",
+      "Assert that a modal or side panel with the title 'Edit Columns/Filters' is visible.",
   });
   // Unchecking the 'Location' column to hide it from the data table.
   await page
@@ -733,24 +701,11 @@ test(title, details, async ({ page }) => {
   // Verify "Manager" appears before "AVG Rating"
   expect(managerIndex).toBeLessThan(avgRatingIndex);
   // Reopening the 'Edit Columns/Filters' modal to verify that the previous configuration persists and to re-enable the 'Location' column, as required by the overall objective.
-  await page
-    .find(
-      '#__next > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-      {
-        failover: [
-          ".//button[normalize-space(.)='Edit Columns/Filters']",
-          'div.mantine-1rlbqtv > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.mantine-1hv2vg > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.mantine-1ywgif7 > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.mantine-le2skq > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'div.c-ejwOqd > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          'body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(3)',
-          "[data-button='true']",
-          'button.mantine-UnstyledButton-root',
-        ],
-      },
-    )
-    .click();
+  await page.getByRole('button', { name: 'Edit Columns/Filters' }).click();
+
+  // Wait for modal to reopen
+  await page.waitForSelector("[role='dialog']", { state: 'visible', timeout: 10000 });
+
   // Checking the previously unselected 'Location' column to verify that the column is now displayed in the UI after saving, as required by the overall objective.
   await page
     .find('#mantine-r2v', {
@@ -867,8 +822,6 @@ test(title, details, async ({ page }) => {
       ],
     })
     .click();
-  // Waiting for the Learner Data Tray to fully load after clicking on a learner name.
-  await page.waitForTimeout(5000);
   // Analyzing the text content of the Learner Data Tray to check for relevant learner details (name, email, contract, manager, etc.) as required by the overall objective.
   const detailsDialog = await page.locator('//div[contains(@class, "mantine-Paper-root mantine-Drawer-drawer")]')
   await expect(detailsDialog).toBeVisible();
