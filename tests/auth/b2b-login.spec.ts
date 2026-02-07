@@ -16,26 +16,53 @@ Assert that the url contains "nvidia"
   ],
 };
 test(title, details, async ({ page }) => {
+  // Check if password is set
+  const password = process.env.B2B_PASSWORD_READONLY || '';
+  if (!password) {
+    throw new Error('B2B_PASSWORD_READONLY environment variable is not set!');
+  }
+  console.log(`Password length: ${password.length}`);
+  
   // Initializing web navigation.
   await page.goto('https://app.immerse.online/login');
   await page.getByRole('heading', { name: 'Log In' }).waitFor({ state: 'visible', timeout: 90000 });
   // Inputting the provided email address into the email field to log in.
   await page.waitForTimeout(10000);
-  await page
+  
+  // Take screenshot before login
+  await page.screenshot({ path: 'test-results/before-login.png', fullPage: true });
+  
+  const emailInput = await page
     .find("[placeholder='Enter your email']", {
       failover: ['input.css-111d7as', 'div.css-1f7apd6 > input'],
-    })
-    .inputText('sample.hradmin.readonly.6@immerse.online');
+    });
+  await emailInput.inputText('sample.hradmin.readonly.6@immerse.online');
+  console.log('Email entered');
+  
+  // Verify email was entered
+  const emailValue = await emailInput.inputValue().catch(() => '');
+  console.log(`Email value: ${emailValue}`);
+  
   // Entering the provided password into the password input field to log in.
-  await page
+  const passwordInput = await page
     .find("[data-testid='passwordinput']", {
       failover: [
         "[placeholder='Enter your password']",
         'input[type="password"]',
         '#mantine-R2kp5aaqm',
       ],
-    })
-    .inputText(process.env.B2B_PASSWORD_READONLY || '');
+    });
+  await passwordInput.inputText(password);
+  console.log('Password entered');
+  
+  // Verify password was entered
+  const passwordLength = await passwordInput.inputValue().then(v => v.length).catch(() => 0);
+  console.log(`Password field length: ${passwordLength}`);
+  
+  if (passwordLength === 0) {
+    await page.screenshot({ path: 'test-results/password-not-entered.png', fullPage: true });
+    throw new Error('Password was not entered into the password field!');
+  }
   // Clicking the 'Login' button to proceed with the login process.
   await page
     .find(".//button[normalize-space(.)='Login']", {

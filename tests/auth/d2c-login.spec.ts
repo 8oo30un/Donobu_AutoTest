@@ -16,29 +16,54 @@ Verify landing at the home page for d2c learners`
   ],
 };
 test(title, details, async ({ page, context }) => {
+  // Check if password is set
+  const password = process.env.D2C_PASSWORD || '';
+  if (!password) {
+    throw new Error('D2C_PASSWORD environment variable is not set!');
+  }
+  console.log(`Password length: ${password.length}`);
+  
   // Initializing web navigation.
   await page.goto('https://app.immerse.online/login');
   // Wait for the login page to load
   await page.getByRole('heading', { name: 'Log In' }).waitFor({ state: 'visible', timeout: 90000 });
   await page.waitForTimeout(10000);
 
+  // Take screenshot before login
+  await page.screenshot({ path: 'test-results/before-login.png', fullPage: true });
+
   // Entering the user's email address as part of the login process.
-  await page
+  const emailInput = await page
     .find("[placeholder='Enter your email']", {
       failover: ['input.css-111d7as', 'div.css-1f7apd6 > input'],
-    })
-    .inputText('test_stripe_v3_user@immerse.online');
+    });
+  await emailInput.inputText('test_stripe_v3_user@immerse.online');
+  console.log('Email entered');
+  
+  // Verify email was entered
+  const emailValue = await emailInput.inputValue().catch(() => '');
+  console.log(`Email value: ${emailValue}`);
 
   // Entering the password and submitting the login form.
-  await page
+  const passwordInput = await page
     .find("[data-testid='passwordinput']", {
       failover: [
         "[placeholder='Enter your password']",
         'input[type="password"]',
         '#mantine-R2kp5aaqm',
       ],
-    })
-    .inputText(process.env.D2C_PASSWORD || '', { finalizeWithSubmit: true });
+    });
+  await passwordInput.inputText(password);
+  console.log('Password entered');
+  
+  // Verify password was entered
+  const passwordLength = await passwordInput.inputValue().then(v => v.length).catch(() => 0);
+  console.log(`Password field length: ${passwordLength}`);
+  
+  if (passwordLength === 0) {
+    await page.screenshot({ path: 'test-results/password-not-entered.png', fullPage: true });
+    throw new Error('Password was not entered into the password field!');
+  }
 
   // Clicking the login button to proceed with the authentication.
   await page
