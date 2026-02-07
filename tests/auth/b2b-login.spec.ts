@@ -7,8 +7,8 @@ const details = {
       type: 'objective',
       description: `Log in with b2b account and verify Nvidia loads:
 
-Enter Email: {{$.env.EMAIL}}
-Enter Password: {{$.env.PASSWORD}}
+Enter Email: sample.hradmin.readonly.6@immerse.online
+Enter Password: {{$.env.B2B_PASSWORD_READONLY}}
 Click on Log In and wait to be redirected.
 Assert that the url contains "nvidia"
 `,
@@ -21,18 +21,11 @@ test(title, details, async ({ page }) => {
   await page.getByRole('heading', { name: 'Log In' }).waitFor({ state: 'visible', timeout: 90000 });
   // Inputting the provided email address into the email field to log in.
   await page.waitForTimeout(10000);
-  const email = process.env.EMAIL;
-  const password = process.env.PASSWORD;
-
-  if (!email || !password) {
-    throw new Error("EMAIL and PASSWORD environment variables must be set");
-  }
-
   await page
     .find("[placeholder='Enter your email']", {
       failover: ['input.css-111d7as', 'div.css-1f7apd6 > input'],
     })
-    .inputText(email);
+    .inputText('sample.hradmin.readonly.6@immerse.online');
   // Entering the provided password into the password input field to log in.
   await page
     .find('#mantine-R2kp5aaqm', {
@@ -41,7 +34,7 @@ test(title, details, async ({ page }) => {
         "[placeholder='Enter your password']",
       ],
     })
-    .inputText(password);
+    .inputText(process.env.B2B_PASSWORD_READONLY || '');
   // Clicking the 'Login' button to proceed with the login process.
   await page
     .find(".//button[normalize-space(.)='Login']", {

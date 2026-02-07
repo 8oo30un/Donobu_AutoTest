@@ -229,8 +229,7 @@ test(title, details, async ({ page }) => {
 
   const loginPercentage = parseFloat(loginPercentageText?.trim().replace('%', '') || '0');
   expect(loginPercentage).toBeGreaterThanOrEqual(0);
-  // Allow up to 101% as data can sometimes show slightly over 100% due to rounding or calculation methods
-  expect(loginPercentage).toBeLessThanOrEqual(101);
+  expect(loginPercentage).toBeLessThanOrEqual(100);
 
   // Verifying that the 'Logged in at Least Once' card has a waving-hand icon on the top-right.
   await page.visuallyAssert({

@@ -24,9 +24,11 @@ Assert that Number of Learners, Logged in at Least Once, and % Attended Trainer-
 };
 test(title, details, async ({ page }) => {
   // Initializing web navigation.
-  await page.goto('https://dev-dashboard.immerse.online/dashboard');
-  // Waiting for the dashboard page to fully load as it appears to be showing a loading spinner.
-  await page.waitForTimeout(3000);
+  await page.goto('https://dev-dashboard.immerse.online/dashboard', { waitUntil: 'networkidle', timeout: 90000 });
+  // Waiting for the dashboard page to fully load
+  await page.waitForTimeout(5000);
+  // Wait for the dashboard content to be visible
+  await page.waitForSelector('.mantine-Container-root', { state: 'visible', timeout: 30000 });
   // Clicking on the Time Frame dropdown to change it from "Last 30 days" to "All Time" as required by the objective.
   await page.clickElement({
     selector: {
@@ -62,6 +64,8 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
+  // Wait for data to reload after changing timeframe
+  await page.waitForTimeout(5000);
   // Verifying that the Number of Learners metric is greater than 0 as required by the objective after changing the timeframe to "All Time".
   await page.visuallyAssert({
     assertionToTestFor:
