@@ -9,48 +9,16 @@ on:
 jobs:
   run-donobu-flows:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install System dependencies
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb jq
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
 
       - name: Install Donobu dependencies
         run: npm install && npx playwright install --with-deps
-
-      - name: Verify environment variables
-        run: |
-          if [ -z "${{ secrets.GOOGLE_GEMINI_API_KEY }}" ]; then
-            echo "❌ ERROR: GOOGLE_GEMINI_API_KEY secret is not set!"
-            exit 1
-          else
-            echo "✅ GOOGLE_GEMINI_API_KEY is set"
-          fi
-          if [ -z "${{ vars.EMAIL }}" ]; then
-            echo "❌ ERROR: EMAIL variable is not set!"
-            exit 1
-          else
-            echo "✅ EMAIL is set"
-          fi
-          if [ -z "${{ secrets.PASSWORD }}" ]; then
-            echo "❌ ERROR: PASSWORD secret is not set!"
-            exit 1
-          else
-            echo "✅ PASSWORD is set"
-          fi
-          if [ -z "${{ vars.D2C_EMAIL }}" ]; then
-            echo "⚠️ WARNING: D2C_EMAIL variable is not set (d2c-login test will be skipped if required)"
-          else
-            echo "✅ D2C_EMAIL is set"
-          fi
-          if [ -z "${{ secrets.D2C_PASSWORD }}" ]; then
-            echo "⚠️ WARNING: D2C_PASSWORD secret is not set (d2c-login test will be skipped if required)"
-          else
-            echo "✅ D2C_PASSWORD is set"
-          fi
 
       - name: Run Playwright tests
         id: run_tests
@@ -60,51 +28,12 @@ jobs:
           GOOGLE_GENERATIVE_AI_MODEL_NAME: gemini-2.5-flash
           EMAIL: ${{ vars.EMAIL }}
           PASSWORD: ${{ secrets.PASSWORD }}
-          D2C_EMAIL: ${{ vars.D2C_EMAIL || '' }}
-          D2C_PASSWORD: ${{ secrets.D2C_PASSWORD || '' }}
+          B2B_PASSWORD_READONLY: ${{ secrets.B2B_PASSWORD_READONLY }}
+          B2B_PASSWORD_READWRITE: ${{ secrets.B2B_PASSWORD_READWRITE }}
+          D2C_PASSWORD: ${{ secrets.D2C_PASSWORD }}
           SELF_HEAL_TESTS_ENABLED: true
 
-        run: |
-          echo "🚀 Starting Playwright tests..."
-          echo "Current directory: $(pwd)"
-          echo "Test directory exists: $(test -d tests && echo 'yes' || echo 'no')"
-          echo "Playwright config exists: $(test -f playwright.config.ts && echo 'yes' || echo 'no')"
-          echo ""
-          echo "📋 Listing available tests..."
-          npx playwright test --list || echo "⚠️ Failed to list tests"
-          echo ""
-          echo "▶️ Running tests..."
-          set +e
-          xvfb-run npx playwright test
-          TEST_EXIT_CODE=$?
-          set -e
-          echo ""
-          echo "=========================================="
-          if [ $TEST_EXIT_CODE -eq 0 ]; then
-            echo "✅ Tests completed (exit code: $TEST_EXIT_CODE)"
-          else
-            echo "❌ Tests failed (exit code: $TEST_EXIT_CODE)"
-          fi
-          echo "=========================================="
-          echo ""
-          echo "📊 Checking for test results..."
-          if [ -d "test-results" ]; then
-            echo "✅ test-results directory exists"
-            ls -la test-results/ | head -20
-          else
-            echo "❌ test-results directory does NOT exist"
-          fi
-          if [ -f "test-results/playwright-report.json" ]; then
-            echo "✅ playwright-report.json exists"
-          else
-            echo "❌ playwright-report.json does NOT exist"
-          fi
-          if [ -d "playwright-report" ]; then
-            echo "✅ playwright-report directory exists"
-          else
-            echo "❌ playwright-report directory does NOT exist"
-          fi
-          exit $TEST_EXIT_CODE
+        run: xvfb-run npx playwright test
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4
@@ -124,13 +53,7 @@ jobs:
 
       - name: Report test results
         if: always()
-        run: |
-          if [ -f "test-results/playwright-report.json" ]; then
-            npm exec playwright-json-to-markdown < "test-results/playwright-report.json" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ JSON report file (playwright-report.json) not found" >> $GITHUB_STEP_SUMMARY
-            echo "Check the test execution logs for details." >> $GITHUB_STEP_SUMMARY
-          fi
+        run: npm exec playwright-json-to-markdown < "test-results/playwright-report.json" >> $GITHUB_STEP_SUMMARY
 
       - name: Post to Slack
         if: always()
@@ -139,12 +62,8 @@ jobs:
         run: |
           if [ -n "$SLACK_WEBHOOK_URL" ]; then
             WORKFLOW_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            if [ -f "test-results/playwright-report.json" ]; then
-              SLACK_PAYLOAD=$(npm exec playwright-json-to-slack-json -- --report-url "$WORKFLOW_URL" < "test-results/playwright-report.json")
-              curl --header 'Content-type: application/json' --data "$SLACK_PAYLOAD" "$SLACK_WEBHOOK_URL"
-            else
-              echo "JSON report not found, skipping Slack notification."
-            fi
+            SLACK_PAYLOAD=$(npm exec playwright-json-to-slack-json -- --report-url "$WORKFLOW_URL" < "test-results/playwright-report.json")
+            curl --header 'Content-type: application/json' --data "$SLACK_PAYLOAD" "$SLACK_WEBHOOK_URL"
           else
             echo "SLACK_WEBHOOK_URL secret not present, skipping Slack notification."
           fi
