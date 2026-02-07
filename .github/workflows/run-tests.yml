@@ -20,6 +20,35 @@ jobs:
       - name: Install Donobu dependencies
         run: npm install && npx playwright install --with-deps
 
+      - name: Verify environment variables
+        run: |
+          echo "🔍 Checking environment variables..."
+          if [ -z "${{ secrets.B2B_PASSWORD_READONLY }}" ]; then
+            echo "❌ ERROR: B2B_PASSWORD_READONLY secret is not set!"
+          else
+            echo "✅ B2B_PASSWORD_READONLY is set (length: ${#B2B_PASSWORD_READONLY})"
+          fi
+          if [ -z "${{ secrets.B2B_PASSWORD_READWRITE }}" ]; then
+            echo "❌ ERROR: B2B_PASSWORD_READWRITE secret is not set!"
+          else
+            echo "✅ B2B_PASSWORD_READWRITE is set (length: ${#B2B_PASSWORD_READWRITE})"
+          fi
+          if [ -z "${{ secrets.D2C_PASSWORD }}" ]; then
+            echo "❌ ERROR: D2C_PASSWORD secret is not set!"
+          else
+            echo "✅ D2C_PASSWORD is set (length: ${#D2C_PASSWORD})"
+          fi
+          if [ -z "${{ vars.EMAIL }}" ]; then
+            echo "❌ ERROR: EMAIL variable is not set!"
+          else
+            echo "✅ EMAIL is set: ${{ vars.EMAIL }}"
+          fi
+          if [ -z "${{ secrets.PASSWORD }}" ]; then
+            echo "❌ ERROR: PASSWORD secret is not set!"
+          else
+            echo "✅ PASSWORD is set (length: ${#PASSWORD})"
+          fi
+
       - name: Run Playwright tests
         id: run_tests
         continue-on-error: true
@@ -33,7 +62,15 @@ jobs:
           D2C_PASSWORD: ${{ secrets.D2C_PASSWORD }}
           SELF_HEAL_TESTS_ENABLED: true
 
-        run: xvfb-run npx playwright test
+        run: |
+          echo "🚀 Starting Playwright tests..."
+          echo "Environment variables check:"
+          echo "EMAIL: ${EMAIL:+SET}"
+          echo "PASSWORD: ${PASSWORD:+SET}"
+          echo "B2B_PASSWORD_READONLY: ${B2B_PASSWORD_READONLY:+SET}"
+          echo "B2B_PASSWORD_READWRITE: ${B2B_PASSWORD_READWRITE:+SET}"
+          echo "D2C_PASSWORD: ${D2C_PASSWORD:+SET}"
+          xvfb-run npx playwright test
 
       - name: Upload Raw Results
         uses: actions/upload-artifact@v4
