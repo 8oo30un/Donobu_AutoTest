@@ -28,10 +28,11 @@ test(title, details, async ({ page }) => {
     .inputText('sample.hradmin.readonly.6@immerse.online');
   // Entering the provided password into the password input field to log in.
   await page
-    .find('#mantine-R2kp5aaqm', {
+    .find("[data-testid='passwordinput']", {
       failover: [
-        "[data-testid='passwordinput']",
         "[placeholder='Enter your password']",
+        'input[type="password"]',
+        '#mantine-R2kp5aaqm',
       ],
     })
     .inputText(process.env.B2B_PASSWORD_READONLY || '');

@@ -31,10 +31,11 @@ test(title, details, async ({ page, context }) => {
 
   // Entering the password and submitting the login form.
   await page
-    .find('#mantine-R2kp5aaqm', {
+    .find("[data-testid='passwordinput']", {
       failover: [
-        "[data-testid='passwordinput']",
         "[placeholder='Enter your password']",
+        'input[type="password"]',
+        '#mantine-R2kp5aaqm',
       ],
     })
     .inputText(process.env.D2C_PASSWORD || '', { finalizeWithSubmit: true });
