@@ -17,7 +17,6 @@ test(title, details, async ({ page }) => {
   // Navigate to the URL and wait for the network to become idle.
   await page.goto('https://dev-dashboard.immerse.online', { waitUntil: 'networkidle', timeout: 90000 });
   await page.waitForTimeout(15000);
-  
   // Entering the email address as specified in the objective to log in to the b2b dashboard.
   // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
   await page
@@ -43,7 +42,7 @@ test(title, details, async ({ page }) => {
         'div:nth-of-type(2) > input',
       ],
     })
-    .inputText(password);
+    .inputText(process.env.B2B_PASSWORD_READONLY || '');
   // Clicking the Login button to submit the credentials and proceed to the dashboard as specified in the objective.
   // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
   await page

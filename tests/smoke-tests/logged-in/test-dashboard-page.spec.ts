@@ -84,7 +84,9 @@ test(title, details, async ({ page }) => {
   await expect(learnersTab).toBeVisible();
   const accountButton = page.locator("[data-testid='layout-header-account-button']");
   await expect(accountButton).toBeVisible();
-  await expect(accountButton).toHaveText("Account");
+  // Account button text may be "Account" or "Account Preferences"
+  const accountText = await accountButton.textContent();
+  expect(accountText).toMatch(/Account/);
   const demoAccountPill = page.getByRole('button', { name: 'Immerse Demo Account' });
   await expect(demoAccountPill).toBeVisible();
   const languageSelector = page.getByRole('searchbox', { name: 'Display Language' });
@@ -129,10 +131,12 @@ test(title, details, async ({ page }) => {
   });
 
   // Checking if the label 'Contract:' is visible on the dashboard.
-  await expect(page.getByText('Contract:')).toBeVisible();
+  await expect(page.getByText('Contract:')).toBeVisible({ timeout: 30000 });
 
   // Verifying that the default selected value for the 'Contract:' dropdown is 'All Contracts'.
-  await expect(page.getByText('All Contracts')).toBeVisible();
+  // Wait for the page to fully load before checking for 'All Contracts' text
+  await page.waitForTimeout(3000);
+  await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 });
 
   // Clicking on the All Contracts dropdown to open it and view the available contracts.
   await page

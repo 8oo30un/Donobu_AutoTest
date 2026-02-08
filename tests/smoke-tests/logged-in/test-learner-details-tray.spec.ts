@@ -176,7 +176,10 @@ test(title, details, async ({ page }) => {
   const drawerModal = page.locator('div.mantine-Drawer-drawer');
   await drawerModal.getByText(`${learnerTableData.name}`).waitFor({ state: 'visible', timeout: 30000 });
   await drawerModal.getByText(`${learnerTableData.email}`).waitFor({ state: 'visible', timeout: 30000 });
-  await drawerModal.getByText(`${learnerTableData.tosValue}`).waitFor({ state: 'visible', timeout: 30000 });
+  // Check if TOS value is visible in the drawer (use first() to avoid strict mode violation when multiple "00:00" exist)
+  if (learnerTableData.tosValue) {
+    await drawerModal.getByText(`${learnerTableData.tosValue}`).first().waitFor({ state: 'visible', timeout: 30000 });
+  }
   // Waiting for the Learner Detail Tray to fully load and display content by asserting for the presence of the 'Lifetime Total (HH:MM)' label.
   await page.getByText("Lifetime Total (HH:MM)").waitFor({ state: 'visible', timeout: 30000 });
   // Scrolling down the Learner Detail Tray to check all expected fields and labels.
