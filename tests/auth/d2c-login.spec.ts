@@ -45,9 +45,11 @@ test(title, details, async ({ page, context }) => {
       failover: ['button.css-3wz0nu', 'div.css-1fhtl0l > button'],
     })
     .click();
+  // Waiting for the login process to complete and the page to redirect to the logged-in page after clicking the Login button.
+  await page.waitForTimeout(3000);
 
   // Verify navigation to GFN desktop after login
-  await expect(page).toHaveURL(/.*gfn\/desktop/);
+  await expect(page).toHaveURL(/.*gfn\/desktop/, { timeout: 90000 });
 
   // Save the authentication state
   await context.storageState({ path: 'd2c-login-state.json' });

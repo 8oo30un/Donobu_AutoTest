@@ -85,7 +85,9 @@ test(title, details, async ({ page }) => {
   await page.waitForTimeout(1000);
   await page.getByRole("heading", { name: "Learners" }).waitFor({ state: "visible", timeout: 30000 });
   // Clicking on the 'All Contracts' dropdown to view available contracts and select one with an available license.
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(3000);
+  // Wait for the dropdown to be visible
+  await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 }).catch(() => {});
   await page
     .find(".//button[normalize-space(.)='All Contracts']", {
       failover: [

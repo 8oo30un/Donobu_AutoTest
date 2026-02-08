@@ -68,6 +68,9 @@ test(title, details, async ({ page }) => {
         .textContent();
 
     // Clicking the All Contracts dropdown to select the first contract from the list.
+    // Wait for the dropdown to be visible
+    await page.waitForTimeout(3000);
+    await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 }).catch(() => {});
     await page
         .find('#mantine-r31-target', {
             failover: [

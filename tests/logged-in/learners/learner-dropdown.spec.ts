@@ -40,6 +40,9 @@ test(title, details, async ({ page }) => {
     },
   });
   // Clicking on the 'All Contracts' dropdown to select 'Coach - IMMERSE Coach'.
+  // Wait for the dropdown to be visible
+  await page.waitForTimeout(3000);
+  await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 }).catch(() => {});
   await page
     .find('#mantine-rc-target', {
       failover: [
