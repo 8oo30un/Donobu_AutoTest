@@ -18,9 +18,11 @@ test(title, details, async ({ page }) => {
   await page.goto('https://dev-dashboard.immerse.online', { waitUntil: 'networkidle', timeout: 90000 });
   await page.waitForTimeout(15000);
   // Entering the email address as specified in the objective to log in to the b2b dashboard.
+  // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
   await page
-    .find("[placeholder='Email']", {
+    .find("[data-testid='login-form-email-input']", {
       failover: [
+        "[placeholder='Email']",
         'input[type="email"]',
         'input[name="email"]',
         '#email',
@@ -29,9 +31,11 @@ test(title, details, async ({ page }) => {
     })
     .inputText('sample.hradmin.readwrite.6@immerse.online');
   // Entering the password as specified in the objective to complete the login credentials for the b2b dashboard.
+  // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
   await page
-    .find("[placeholder='Password']", {
+    .find("[data-testid='login-form-password-input']", {
       failover: [
+        "[placeholder='Password']",
         'input[type="password"]',
         'input[name="password"]',
         '#password',
