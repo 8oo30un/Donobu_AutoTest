@@ -84,7 +84,9 @@ test(title, details, async ({ page }) => {
   await expect(learnersTab).toBeVisible();
   const accountButton = page.locator("[data-testid='layout-header-account-button']");
   await expect(accountButton).toBeVisible();
-  await expect(accountButton).toHaveText("Account");
+  // Account button text may be "Account" or "Account Preferences"
+  const accountText = await accountButton.textContent();
+  expect(accountText).toMatch(/Account/);
   const demoAccountPill = page.getByRole('button', { name: 'Immerse Demo Account' });
   await expect(demoAccountPill).toBeVisible();
   const languageSelector = page.getByRole('searchbox', { name: 'Display Language' });
