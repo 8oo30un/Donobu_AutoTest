@@ -37,7 +37,7 @@ test(title, details, async ({ page }) => {
         '#mantine-R2kp5aaqm',
       ],
     })
-    .inputText(password);
+    .inputText(process.env.B2B_PASSWORD_READONLY || '');
   // Clicking the 'Login' button to proceed with the login process.
   await page
     .find(".//button[normalize-space(.)='Login']", {
