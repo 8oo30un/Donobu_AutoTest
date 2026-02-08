@@ -130,6 +130,14 @@ test(title, details, async ({ page }) => {
       "An active tab is typically indicated by an underline or a different background color. The text 'Dashboard' should be present and visually distinct from other tabs.",
   });
 
+  // Wait for all components loaded in UI with proper value, also wait until graph is rendered.
+  await page.visuallyAssert({
+    assertionToTestFor:
+      'Assert that all components loaded in UI with proper value, also wait until graph is rendered',
+    retries: 5,
+    retryWaitSeconds: 5,
+  });
+
   // Checking if the label 'Contract:' is visible on the dashboard.
   await expect(page.getByText('Contract:')).toBeVisible({ timeout: 30000 });
 

@@ -39,6 +39,13 @@ test(title, details, async ({ page }) => {
       frame: null,
     },
   });
+  // Wait for all components loaded in UI with proper value
+  await page.visuallyAssert({
+    assertionToTestFor:
+      'Assert that all components loaded in UI with proper value, including the Contract dropdown',
+    retries: 3,
+    retryWaitSeconds: 3,
+  });
   // Clicking on the 'All Contracts' dropdown to select 'Coach - IMMERSE Coach'.
   await page
     .find('#mantine-rc-target', {

@@ -84,6 +84,13 @@ test(title, details, async ({ page }) => {
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(1000);
   await page.getByRole("heading", { name: "Learners" }).waitFor({ state: "visible", timeout: 30000 });
+  // Wait for all components loaded in UI with proper value
+  await page.visuallyAssert({
+    assertionToTestFor:
+      'Assert that all components loaded in UI with proper value, including the Contract dropdown',
+    retries: 3,
+    retryWaitSeconds: 3,
+  });
   // Clicking on the 'All Contracts' dropdown to view available contracts and select one with an available license.
   await page.waitForTimeout(2000);
   await page

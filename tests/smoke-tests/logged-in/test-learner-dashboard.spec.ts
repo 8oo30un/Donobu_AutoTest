@@ -110,6 +110,13 @@ test(title, details, async ({ page }) => {
     .click();
   // Verifying that the learner table is displayed and rendered properly
   await page.locator('[data-testid="learners-table"]').waitFor({ state: 'visible', timeout: 90000 });
+  // Wait for all components loaded in UI with proper value
+  await page.visuallyAssert({
+    assertionToTestFor:
+      'Assert that all components loaded in UI with proper value, including the Contract dropdown',
+    retries: 3,
+    retryWaitSeconds: 3,
+  });
   // Verifying that the learner table is rendered properly with aligned columns, readable text, consistent font size, visible and non-overlapping key sections (Filters, Search, Columns), no broken icons, empty states, or undefined labels, and that the overall layout looks polished and demo-presentable, as per the overall objective.
   await page.visuallyAssert({
     assertionToTestFor:
