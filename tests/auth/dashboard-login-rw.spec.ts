@@ -14,58 +14,35 @@ Verify user lands on Dashboard home page by asserting the words "Learning Summar
   ],
 };
 test(title, details, async ({ page }) => {
-  // Check if password is set
-  const password = process.env.B2B_PASSWORD_READWRITE || '';
-  if (!password) {
-    throw new Error('B2B_PASSWORD_READWRITE environment variable is not set!');
-  }
-  console.log(`Password length: ${password.length}`);
-  
   // Navigate to the URL and wait for the network to become idle.
   await page.goto('https://dev-dashboard.immerse.online', { waitUntil: 'networkidle', timeout: 90000 });
   await page.waitForTimeout(15000);
-  
-  // Take screenshot before login
-  await page.screenshot({ path: 'test-results/before-login.png', fullPage: true });
-  
   // Entering the email address as specified in the objective to log in to the b2b dashboard.
-  const emailInput = await page
-    .find("[placeholder='Email']", {
+  // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
+  await page
+    .find("[data-testid='login-form-email-input']", {
       failover: [
+        "[placeholder='Email']",
         'input[type="email"]',
         'input[name="email"]',
         '#email',
         'div:nth-of-type(1) > input',
       ],
-    });
-  await emailInput.inputText('sample.hradmin.readwrite.6@immerse.online');
-  console.log('Email entered');
-  
-  // Verify email was entered
-  const emailValue = await emailInput.inputValue().catch(() => '');
-  console.log(`Email value: ${emailValue}`);
-  
+    })
+    .inputText('sample.hradmin.readwrite.6@immerse.online');
   // Entering the password as specified in the objective to complete the login credentials for the b2b dashboard.
-  const passwordInput = await page
-    .find("[placeholder='Password']", {
+  // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
+  await page
+    .find("[data-testid='login-form-password-input']", {
       failover: [
+        "[placeholder='Password']",
         'input[type="password"]',
         'input[name="password"]',
         '#password',
         'div:nth-of-type(2) > input',
       ],
-    });
-  await passwordInput.inputText(password);
-  console.log('Password entered');
-  
-  // Verify password was entered
-  const passwordLength = await passwordInput.inputValue().then(v => v.length).catch(() => 0);
-  console.log(`Password field length: ${passwordLength}`);
-  
-  if (passwordLength === 0) {
-    await page.screenshot({ path: 'test-results/password-not-entered.png', fullPage: true });
-    throw new Error('Password was not entered into the password field!');
-  }
+    })
+    .inputText(process.env.B2B_PASSWORD_READWRITE || '');
   // Clicking the Login button to submit the credentials and proceed to the dashboard as specified in the objective.
   await page
     .find(".//button[normalize-space(.)='Login']", {

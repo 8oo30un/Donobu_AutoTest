@@ -14,124 +14,48 @@ Verify user lands on Dashboard home page by asserting the words "Learning Summar
   ],
 };
 test(title, details, async ({ page }) => {
-  // Check if password is set
-  const password = process.env.B2B_PASSWORD_READONLY || '';
-  if (!password) {
-    throw new Error('B2B_PASSWORD_READONLY environment variable is not set!');
-  }
-  console.log(`Password length: ${password.length}`);
-  
   // Navigate to the URL and wait for the network to become idle.
   await page.goto('https://dev-dashboard.immerse.online', { waitUntil: 'networkidle', timeout: 90000 });
   await page.waitForTimeout(15000);
   
-  // Take screenshot before login
-  await page.screenshot({ path: 'test-results/before-login.png', fullPage: true });
-  
   // Entering the email address as specified in the objective to log in to the b2b dashboard.
-  const emailInput = await page
-    .find("[placeholder='Email']", {
+  // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
+  await page
+    .find("[data-testid='login-form-email-input']", {
       failover: [
+        "[placeholder='Email']",
         'input[type="email"]',
         'input[name="email"]',
         '#email',
         'div:nth-of-type(1) > input',
       ],
-    });
-  await emailInput.inputText('sample.hradmin.readonly.6@immerse.online');
-  console.log('Email entered');
-  
-  // Verify email was entered
-  const emailValue = await emailInput.inputValue().catch(() => '');
-  console.log(`Email value: ${emailValue}`);
-  
+    })
+    .inputText('sample.hradmin.readonly.6@immerse.online');
   // Entering the password as specified in the objective to complete the login credentials for the b2b dashboard.
-  const passwordInput = await page
-    .find("[placeholder='Password']", {
+  // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
+  await page
+    .find("[data-testid='login-form-password-input']", {
       failover: [
+        "[placeholder='Password']",
         'input[type="password"]',
         'input[name="password"]',
         '#password',
         'div:nth-of-type(2) > input',
       ],
-    });
-  await passwordInput.inputText(password);
-  console.log('Password entered');
-  
-  // Verify password was entered (check if field has value, but don't log the actual password)
-  const passwordLength = await passwordInput.inputValue().then(v => v.length).catch(() => 0);
-  console.log(`Password field length: ${passwordLength}`);
-  
-  if (passwordLength === 0) {
-    await page.screenshot({ path: 'test-results/password-not-entered.png', fullPage: true });
-    throw new Error('Password was not entered into the password field!');
-  }
+    })
+    .inputText(password);
   // Clicking the Login button to submit the credentials and proceed to the dashboard as specified in the objective.
-  const loginButton = await page
-    .find(".//button[normalize-space(.)='Login']", {
+  // Use data-testid first as it's more stable (same as b2b-login-smoke-test.spec.ts)
+  await page
+    .find("[data-testid='login-form-submit-button']", {
       failover: [
+        ".//button[normalize-space(.)='Login']",
         'button[type="submit"]',
         ".//button[contains(text(), 'Log')]",
         'button',
       ],
-    });
-  
-  // Wait for button to be enabled
-  await loginButton.waitFor({ state: 'visible', timeout: 5000 });
-  console.log('Login button found and visible');
-  
-  // Take screenshot before clicking login
-  await page.screenshot({ path: 'test-results/before-login-click.png', fullPage: true });
-  
-  // Click login button and wait for navigation
-  const [response] = await Promise.all([
-    page.waitForResponse(response => 
-      response.url().includes('/api/') || 
-      response.url().includes('/auth/') ||
-      response.status() === 200 || 
-      response.status() === 302
-    , { timeout: 10000 }).catch(() => null),
-    loginButton.click(),
-  ]);
-  
-  console.log(`Login response: ${response ? response.status() : 'No response'}`);
-  console.log(`Response URL: ${response ? response.url() : 'N/A'}`);
-  
-  // Wait a bit for login to process
-  await page.waitForTimeout(5000);
-  
-  // Check current URL for debugging
-  const currentUrl = page.url();
-  console.log(`Current URL after login click: ${currentUrl}`);
-  
-  // Check for error messages more thoroughly
-  const errorSelectors = [
-    'text=/invalid/i',
-    'text=/incorrect/i',
-    'text=/failed/i',
-    'text=/error/i',
-    '[role="alert"]',
-    '.error',
-    '[class*="error"]',
-  ];
-  
-  for (const selector of errorSelectors) {
-    const errorElement = await page.locator(selector).first().isVisible().catch(() => false);
-    if (errorElement) {
-      const errorMessage = await page.locator(selector).first().textContent().catch(() => 'Unknown error');
-      console.log(`Login error detected with selector ${selector}: ${errorMessage}`);
-      await page.screenshot({ path: 'test-results/login-error.png', fullPage: true });
-      throw new Error(`Login failed: ${errorMessage}`);
-    }
-  }
-  
-  // If still on login page after 5 seconds, something went wrong
-  if (currentUrl.includes('/login')) {
-    await page.screenshot({ path: 'test-results/still-on-login-page.png', fullPage: true });
-    const pageText = await page.textContent('body').catch(() => '');
-    console.log(`Page still on login. Body text preview: ${pageText.substring(0, 200)}`);
-  }
-  
+    })
+    .click();
   // Waiting for the login process to complete and the page to redirect to the dashboard after clicking the Login button.
   await page.waitForURL('**/dashboard**', { timeout: 90000 });
   // Verifying that the user has successfully landed on the Dashboard home page by checking for the presence of "Learning Summary" text as specified in the objective.
