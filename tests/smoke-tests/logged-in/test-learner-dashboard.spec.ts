@@ -166,10 +166,11 @@ test(title, details, async ({ page }) => {
   await expect(learnerRowsCount).toBeGreaterThan(40);
   // Clicking on the Contract Filter dropdown (default: 'All Contracts') to select a valid contract name, as per the overall objective.
   await page
-    .find('#mantine-r3-target', {
+    .find(".//button[normalize-space(.)='All Contracts']", {
       failover: [
+        "[data-testid='learners-contract-filter-dropdown']",
+        '#mantine-r3-target',
         '#__next > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > button',
-        ".//button[normalize-space(.)='All Contracts']",
         "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > [data-button='true']",
         'div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > button.mantine-UnstyledButton-root',
         'div.mantine-7khlmp > div:nth-of-type(1) > button',

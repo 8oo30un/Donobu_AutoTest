@@ -86,9 +86,12 @@ test(title, details, async ({ page }) => {
   await page.getByRole("heading", { name: "Learners" }).waitFor({ state: "visible", timeout: 30000 });
   // Clicking on the 'All Contracts' dropdown to view available contracts and select one with an available license.
   await page.waitForTimeout(2000);
+  // Wait for the dropdown to be visible
+  await page.waitForSelector(".//button[normalize-space(.)='All Contracts'], [data-testid='learners-contract-filter-dropdown']", { timeout: 10000 }).catch(() => {});
   await page
     .find(".//button[normalize-space(.)='All Contracts']", {
       failover: [
+        "[data-testid='learners-contract-filter-dropdown']",
         "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > [data-button='true']",
         'div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > button.mantine-UnstyledButton-root',
         'div.mantine-7khlmp > div:nth-of-type(1) > button',

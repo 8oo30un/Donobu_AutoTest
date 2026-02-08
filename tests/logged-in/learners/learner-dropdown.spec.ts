@@ -40,11 +40,11 @@ test(title, details, async ({ page }) => {
     },
   });
   // Clicking on the 'All Contracts' dropdown to select 'Coach - IMMERSE Coach'.
-  await page.clickElement({
-    selector: {
-      element: [
+  await page
+    .find(".//button[normalize-space(.)='All Contracts']", {
+      failover: [
+        "[data-testid='learners-contract-filter-dropdown']",
         '#mantine-rc-target',
-        "//button[normalize-space(.)='All Contracts']",
         'html > body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > button',
         'div > button:nth-of-type(1)',
         "[data-button='true']",
@@ -52,9 +52,8 @@ test(title, details, async ({ page }) => {
         'div > :nth-child(2)',
         'button',
       ],
-      frame: null,
-    },
-  });
+    })
+    .click();
   // Choosing "Coach - IMMERSE Coach" from the contract dropdown.
   await page.clickElement({
     selector: {
