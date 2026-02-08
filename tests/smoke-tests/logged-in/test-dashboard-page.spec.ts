@@ -134,9 +134,7 @@ test(title, details, async ({ page }) => {
   await expect(page.getByText('Contract:')).toBeVisible({ timeout: 30000 });
 
   // Verifying that the default selected value for the 'Contract:' dropdown is 'All Contracts'.
-  // Wait for the page to fully load before checking for 'All Contracts' text
-  await page.waitForTimeout(3000);
-  await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 });
+  await expect(page.getByText('All Contracts')).toBeVisible();
 
   // Clicking on the All Contracts dropdown to open it and view the available contracts.
   await page

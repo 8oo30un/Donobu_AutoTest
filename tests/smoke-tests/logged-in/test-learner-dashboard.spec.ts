@@ -165,9 +165,6 @@ test(title, details, async ({ page }) => {
   learnerRowsCount = await page.locator('[data-testid="learners-table"] tbody tr').count();
   await expect(learnerRowsCount).toBeGreaterThan(40);
   // Clicking on the Contract Filter dropdown (default: 'All Contracts') to select a valid contract name, as per the overall objective.
-  // Wait for the dropdown to be visible
-  await page.waitForTimeout(3000);
-  await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 }).catch(() => {});
   await page
     .find('#mantine-r3-target', {
       failover: [
