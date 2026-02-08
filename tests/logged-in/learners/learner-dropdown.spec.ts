@@ -41,10 +41,10 @@ test(title, details, async ({ page }) => {
   });
   // Clicking on the 'All Contracts' dropdown to select 'Coach - IMMERSE Coach'.
   await page
-    .find(".//button[normalize-space(.)='All Contracts']", {
+    .find('#mantine-rc-target', {
       failover: [
+        "//button[normalize-space(.)='All Contracts']",
         "[data-testid='learners-contract-filter-dropdown']",
-        '#mantine-rc-target',
         'html > body > div:nth-of-type(1) > div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > button',
         'div > button:nth-of-type(1)',
         "[data-button='true']",

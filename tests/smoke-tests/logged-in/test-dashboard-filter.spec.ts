@@ -69,10 +69,10 @@ test(title, details, async ({ page }) => {
 
     // Clicking the All Contracts dropdown to select the first contract from the list.
     await page
-        .find("[data-testid='dashboard-header-contract-dropdown']", {
+        .find('#mantine-r31-target', {
             failover: [
+                "[data-testid='dashboard-header-contract-dropdown']",
                 ".//button[normalize-space(.)='All Contracts']",
-                '#mantine-r31-target',
                 "div:nth-of-type(2) > div:nth-of-type(2) > [data-button='true']",
                 'div:nth-of-type(2) > div:nth-of-type(2) > button.mantine-UnstyledButton-root',
                 'div.mantine-wqtrt6 > div:nth-of-type(2) > div:nth-of-type(2) > button',

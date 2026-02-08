@@ -31,11 +31,10 @@ test(title, details, async ({ page, context }) => {
 
   // Entering the password and submitting the login form.
   await page
-    .find("[data-testid='passwordinput']", {
+    .find('#mantine-R2kp5aaqm', {
       failover: [
+        "[data-testid='passwordinput']",
         "[placeholder='Enter your password']",
-        'input[type="password"]',
-        '#mantine-R2kp5aaqm',
       ],
     })
     .inputText(process.env.D2C_PASSWORD || '', { finalizeWithSubmit: true });
@@ -46,11 +45,9 @@ test(title, details, async ({ page, context }) => {
       failover: ['button.css-3wz0nu', 'div.css-1fhtl0l > button'],
     })
     .click();
-  // Waiting for the login process to complete and the page to redirect to the logged-in page after clicking the Login button.
-  await page.waitForTimeout(3000);
 
   // Verify navigation to GFN desktop after login
-  await expect(page).toHaveURL(/.*gfn\/desktop/, { timeout: 90000 });
+  await expect(page).toHaveURL(/.*gfn\/desktop/);
 
   // Save the authentication state
   await context.storageState({ path: 'd2c-login-state.json' });
