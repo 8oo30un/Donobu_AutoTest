@@ -8,7 +8,7 @@
  *
  * ...or by configuring a flow runner using the Donobu app.
  */
-import { test } from 'donobu';
+import { test, expect } from 'donobu';
 
 const title = 'dashboard-learner-dropdown';
 const details = {
