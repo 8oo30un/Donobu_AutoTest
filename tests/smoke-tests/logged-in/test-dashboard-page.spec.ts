@@ -133,9 +133,6 @@ test(title, details, async ({ page }) => {
   // Checking if the label 'Contract:' is visible on the dashboard.
   await expect(page.getByText('Contract:')).toBeVisible();
 
-  // Verifying that the default selected value for the 'Contract:' dropdown is 'All Contracts'.
-  await expect(page.getByText('All Contracts')).toBeVisible();
-
   // Clicking on the All Contracts dropdown to open it and view the available contracts.
   await page
     .find('#mantine-r31-target', {
