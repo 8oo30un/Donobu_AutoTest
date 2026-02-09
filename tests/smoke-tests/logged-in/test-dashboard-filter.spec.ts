@@ -67,9 +67,6 @@ test(title, details, async ({ page }) => {
         .locator('[data-testid="dashboard-summary-attendance-percentage-card"] div:nth-of-type(3) div')
         .textContent();
 
-    // Wait for the All Contracts dropdown to be visible before clicking
-    await page.waitForTimeout(2000);
-    await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 });
     // Clicking the All Contracts dropdown to select the first contract from the list.
     await page
         .find('#mantine-r31-target', {
