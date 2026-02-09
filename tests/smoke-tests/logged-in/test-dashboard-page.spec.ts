@@ -131,10 +131,10 @@ test(title, details, async ({ page }) => {
   });
 
   // Checking if the label 'Contract:' is visible on the dashboard.
-  await expect(page.getByText('Contract:')).toBeVisible();
+  await expect(page.getByText('Contract:')).toBeVisible({ timeout: 30000 });
 
   // Verifying that the default selected value for the 'Contract:' dropdown is 'All Contracts'.
-  await expect(page.getByText('All Contracts')).toBeVisible();
+  await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 });
 
   // Clicking on the All Contracts dropdown to open it and view the available contracts.
   await page

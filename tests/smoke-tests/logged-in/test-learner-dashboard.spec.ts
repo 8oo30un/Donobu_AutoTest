@@ -164,6 +164,9 @@ test(title, details, async ({ page }) => {
   // Verifying that the learner table entry list updates as per the selected per-page size (50), as per the overall objective. I am checking for the number of results displayed.
   learnerRowsCount = await page.locator('[data-testid="learners-table"] tbody tr').count();
   await expect(learnerRowsCount).toBeGreaterThan(40);
+  // Wait for the Contract Filter dropdown to be visible before clicking
+  await page.waitForTimeout(2000);
+  await expect(page.getByText('All Contracts')).toBeVisible({ timeout: 30000 });
   // Clicking on the Contract Filter dropdown (default: 'All Contracts') to select a valid contract name, as per the overall objective.
   await page
     .find('#mantine-r3-target', {
